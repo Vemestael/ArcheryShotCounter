@@ -4,13 +4,15 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
+import androidx.annotation.StringRes
+import com.example.archeryshotcounter.R
 import kotlin.math.sqrt
 
-enum class Sensitivity(val labelRu: String, val threshold: Float) {
-    HIGH("Высокая (8 м/с²)", 8f),
-    MEDIUM("Средняя (13 м/с²)", 13f),
-    LOW("Низкая (20 м/с²)", 20f),
-    CUSTOM("Свой вариант", 0f)
+enum class Sensitivity(@param:StringRes val labelRes: Int, val threshold: Float) {
+    HIGH(R.string.sensitivity_high, 8f),
+    MEDIUM(R.string.sensitivity_medium, 13f),
+    LOW(R.string.sensitivity_low, 20f),
+    CUSTOM(R.string.sensitivity_custom, 0f)
 }
 
 /**

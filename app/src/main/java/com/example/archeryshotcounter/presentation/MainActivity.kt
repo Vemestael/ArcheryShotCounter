@@ -1,5 +1,7 @@
 package com.example.archeryshotcounter.presentation
 
+import android.content.Context
+import android.content.res.Configuration
 import android.hardware.SensorManager
 import android.os.Build
 import android.os.Bundle
@@ -8,6 +10,7 @@ import android.os.Vibrator
 import android.os.VibratorManager
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
+import java.util.Locale
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -27,6 +30,8 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.res.stringResource
+import com.example.archeryshotcounter.R
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -49,6 +54,15 @@ import androidx.wear.compose.material3.lazy.rememberTransformationSpec
 import androidx.wear.compose.material3.lazy.transformedHeight
 import com.example.archeryshotcounter.presentation.theme.ArcheryShotCounterTheme
 
+private const val PREFS_NAME = "settings"
+private const val KEY_LANGUAGE = "language"
+
+enum class AppLanguage(val code: String) {
+    SYSTEM("system"),
+    ENGLISH("en"),
+    RUSSIAN("ru")
+}
+
 class MainActivity : ComponentActivity() {
 
     private lateinit var shotDetector: ShotDetector
@@ -58,6 +72,26 @@ class MainActivity : ComponentActivity() {
     private var isDetecting by mutableStateOf(false)
     private var sensitivity by mutableStateOf(Sensitivity.MEDIUM)
     private var customThreshold by mutableIntStateOf(15)
+    private var currentLanguage by mutableStateOf(AppLanguage.SYSTEM)
+
+    override fun attachBaseContext(newBase: Context) {
+        val code = newBase.getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+            .getString(KEY_LANGUAGE, AppLanguage.SYSTEM.code) ?: AppLanguage.SYSTEM.code
+        currentLanguage = AppLanguage.entries.find { it.code == code } ?: AppLanguage.SYSTEM
+        if (code == AppLanguage.SYSTEM.code) {
+            super.attachBaseContext(newBase)
+        } else {
+            val config = Configuration(newBase.resources.configuration)
+            config.setLocale(Locale.forLanguageTag(code))
+            super.attachBaseContext(newBase.createConfigurationContext(config))
+        }
+    }
+
+    private fun changeLanguage(lang: AppLanguage) {
+        getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+            .edit().putString(KEY_LANGUAGE, lang.code).apply()
+        recreate()
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -87,6 +121,7 @@ class MainActivity : ComponentActivity() {
                     isDetecting = isDetecting,
                     sensitivity = sensitivity,
                     customThreshold = customThreshold,
+                    currentLanguage = currentLanguage,
                     onToggleDetection = ::toggleDetection,
                     onReset = { shotCount = 0 },
                     onManualAdjust = { delta ->
@@ -99,7 +134,8 @@ class MainActivity : ComponentActivity() {
                     onCustomThresholdChange = { value ->
                         customThreshold = value
                         shotDetector.customThreshold = value.toFloat()
-                    }
+                    },
+                    onLanguageChange = ::changeLanguage
                 )
             }
         }
@@ -140,11 +176,13 @@ fun ArcheryApp(
     isDetecting: Boolean,
     sensitivity: Sensitivity,
     customThreshold: Int,
+    currentLanguage: AppLanguage,
     onToggleDetection: () -> Unit,
     onReset: () -> Unit,
     onManualAdjust: (Int) -> Unit,
     onSensitivityChange: (Sensitivity) -> Unit,
-    onCustomThresholdChange: (Int) -> Unit
+    onCustomThresholdChange: (Int) -> Unit,
+    onLanguageChange: (AppLanguage) -> Unit
 ) {
     val pagerState = rememberPagerState(pageCount = { 2 })
     AppScaffold {
@@ -161,8 +199,10 @@ fun ArcheryApp(
                     1 -> SettingsScreen(
                         sensitivity = sensitivity,
                         customThreshold = customThreshold,
+                        currentLanguage = currentLanguage,
                         onSensitivityChange = onSensitivityChange,
-                        onCustomThresholdChange = onCustomThresholdChange
+                        onCustomThresholdChange = onCustomThresholdChange,
+                        onLanguageChange = onLanguageChange
                     )
                 }
             }
@@ -206,7 +246,7 @@ fun MainScreen(
                     )
                     Spacer(modifier = Modifier.size(6.dp))
                     Text(
-                        text = if (isDetecting) "ОБНАРУЖЕНИЕ" else "ПАУЗА",
+                        text = if (isDetecting) stringResource(R.string.status_detecting) else stringResource(R.string.status_paused),
                         style = MaterialTheme.typography.labelSmall,
                         color = statusColor
                     )
@@ -228,7 +268,7 @@ fun MainScreen(
                         color = MaterialTheme.colorScheme.primary
                     )
                     Text(
-                        text = "выстрелов",
+                        text = stringResource(R.string.shots_label),
                         style = MaterialTheme.typography.bodySmall,
                         color = Color(0xFF9E9E9E)
                     )
@@ -280,7 +320,7 @@ fun MainScreen(
                     )
                 ) {
                     Text(
-                        text = if (isDetecting) "СТОП" else "СТАРТ",
+                        text = if (isDetecting) stringResource(R.string.btn_stop) else stringResource(R.string.btn_start),
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -298,7 +338,7 @@ fun MainScreen(
                         contentColor = MaterialTheme.colorScheme.onSecondaryContainer
                     )
                 ) {
-                    Text("СБРОС")
+                    Text(stringResource(R.string.btn_reset))
                 }
             }
 
@@ -317,8 +357,10 @@ fun MainScreen(
 fun SettingsScreen(
     sensitivity: Sensitivity,
     customThreshold: Int,
+    currentLanguage: AppLanguage,
     onSensitivityChange: (Sensitivity) -> Unit,
-    onCustomThresholdChange: (Int) -> Unit
+    onCustomThresholdChange: (Int) -> Unit,
+    onLanguageChange: (AppLanguage) -> Unit
 ) {
     val listState = rememberTransformingLazyColumnState()
     val transformationSpec = rememberTransformationSpec()
@@ -336,7 +378,7 @@ fun SettingsScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "Чувствительность",
+                        text = stringResource(R.string.sensitivity_title),
                         style = MaterialTheme.typography.titleSmall,
                         color = Color(0xFFCCCCCC)
                     )
@@ -359,7 +401,7 @@ fun SettingsScreen(
                                 contentColor = Color(0xFFAAAAAA)
                             )
                     ) {
-                        Text(s.labelRu)
+                        Text(stringResource(s.labelRes))
                     }
                 }
 
@@ -398,7 +440,7 @@ fun SettingsScreen(
                     }
                     item {
                         Text(
-                            text = "м/с²  •  диапазон 5–50",
+                            text = stringResource(R.string.sensitivity_range),
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(bottom = 4.dp),
@@ -406,6 +448,47 @@ fun SettingsScreen(
                             style = MaterialTheme.typography.labelSmall,
                             color = Color(0xFF666666)
                         )
+                    }
+                }
+            }
+
+            item {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 12.dp, bottom = 4.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = stringResource(R.string.lang_section_title),
+                        style = MaterialTheme.typography.titleSmall,
+                        color = Color(0xFFCCCCCC)
+                    )
+                }
+            }
+
+            AppLanguage.entries.forEach { lang ->
+                item {
+                    val label = when (lang) {
+                        AppLanguage.SYSTEM -> stringResource(R.string.lang_system)
+                        AppLanguage.ENGLISH -> "English"
+                        AppLanguage.RUSSIAN -> "Русский"
+                    }
+                    Button(
+                        onClick = { onLanguageChange(lang) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .transformedHeight(this, transformationSpec),
+                        transformation = SurfaceTransformation(transformationSpec),
+                        colors = if (currentLanguage == lang)
+                            ButtonDefaults.buttonColors()
+                        else
+                            ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFF3A3A3A),
+                                contentColor = Color(0xFFAAAAAA)
+                            )
+                    ) {
+                        Text(label)
                     }
                 }
             }

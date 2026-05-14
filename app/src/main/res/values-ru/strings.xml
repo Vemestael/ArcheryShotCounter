@@ -1,0 +1,21 @@
+<resources>
+    <string name="app_name">Счётчик выстрелов</string>
+
+    <string name="status_detecting">ОБНАРУЖЕНИЕ</string>
+    <string name="status_paused">ПАУЗА</string>
+    <string name="shots_label">выстрелов</string>
+
+    <string name="btn_start">СТАРТ</string>
+    <string name="btn_stop">СТОП</string>
+    <string name="btn_reset">СБРОС</string>
+
+    <string name="sensitivity_title">Чувствительность</string>
+    <string name="sensitivity_range">м/с²  •  диапазон 5–50</string>
+    <string name="sensitivity_high">Высокая (8 м/с²)</string>
+    <string name="sensitivity_medium">Средняя (13 м/с²)</string>
+    <string name="sensitivity_low">Низкая (20 м/с²)</string>
+    <string name="sensitivity_custom">Свой вариант</string>
+
+    <string name="lang_section_title">Язык</string>
+    <string name="lang_system">Системный</string>
+</resources>
