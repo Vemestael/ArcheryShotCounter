@@ -57,6 +57,7 @@ class MainActivity : ComponentActivity() {
     private var shotCount by mutableIntStateOf(0)
     private var isDetecting by mutableStateOf(false)
     private var sensitivity by mutableStateOf(Sensitivity.MEDIUM)
+    private var customThreshold by mutableIntStateOf(15)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -85,6 +86,7 @@ class MainActivity : ComponentActivity() {
                     shotCount = shotCount,
                     isDetecting = isDetecting,
                     sensitivity = sensitivity,
+                    customThreshold = customThreshold,
                     onToggleDetection = ::toggleDetection,
                     onReset = { shotCount = 0 },
                     onManualAdjust = { delta ->
@@ -93,6 +95,10 @@ class MainActivity : ComponentActivity() {
                     onSensitivityChange = { s ->
                         sensitivity = s
                         shotDetector.sensitivity = s
+                    },
+                    onCustomThresholdChange = { value ->
+                        customThreshold = value
+                        shotDetector.customThreshold = value.toFloat()
                     }
                 )
             }
@@ -133,10 +139,12 @@ fun ArcheryApp(
     shotCount: Int,
     isDetecting: Boolean,
     sensitivity: Sensitivity,
+    customThreshold: Int,
     onToggleDetection: () -> Unit,
     onReset: () -> Unit,
     onManualAdjust: (Int) -> Unit,
-    onSensitivityChange: (Sensitivity) -> Unit
+    onSensitivityChange: (Sensitivity) -> Unit,
+    onCustomThresholdChange: (Int) -> Unit
 ) {
     val pagerState = rememberPagerState(pageCount = { 2 })
     AppScaffold {
@@ -152,7 +160,9 @@ fun ArcheryApp(
                     )
                     1 -> SettingsScreen(
                         sensitivity = sensitivity,
-                        onSensitivityChange = onSensitivityChange
+                        customThreshold = customThreshold,
+                        onSensitivityChange = onSensitivityChange,
+                        onCustomThresholdChange = onCustomThresholdChange
                     )
                 }
             }
@@ -240,13 +250,13 @@ fun MainScreen(
                             contentColor = Color(0xFFCCCCCC)
                         )
                     ) {
-                        Text("−1", fontWeight = FontWeight.Bold)
+                        Text("−1", fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
                     }
                     Button(
                         onClick = { onManualAdjust(1) },
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("+1", fontWeight = FontWeight.Bold)
+                        Text("+1", fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
                     }
                 }
             }
@@ -306,7 +316,9 @@ fun MainScreen(
 @Composable
 fun SettingsScreen(
     sensitivity: Sensitivity,
-    onSensitivityChange: (Sensitivity) -> Unit
+    customThreshold: Int,
+    onSensitivityChange: (Sensitivity) -> Unit,
+    onCustomThresholdChange: (Int) -> Unit
 ) {
     val listState = rememberTransformingLazyColumnState()
     val transformationSpec = rememberTransformationSpec()
@@ -348,6 +360,52 @@ fun SettingsScreen(
                             )
                     ) {
                         Text(s.labelRu)
+                    }
+                }
+
+                if (s == Sensitivity.CUSTOM && sensitivity == Sensitivity.CUSTOM) {
+                    item {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 8.dp, vertical = 4.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Button(
+                                onClick = { if (customThreshold > 5) onCustomThresholdChange(customThreshold - 1) },
+                                modifier = Modifier.weight(1f),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFF3A3A3A),
+                                    contentColor = Color(0xFFCCCCCC)
+                                )
+                            ) { Text("−", fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()) }
+
+                            Text(
+                                text = "$customThreshold",
+                                modifier = Modifier.weight(1f),
+                                textAlign = TextAlign.Center,
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+
+                            Button(
+                                onClick = { if (customThreshold < 50) onCustomThresholdChange(customThreshold + 1) },
+                                modifier = Modifier.weight(1f)
+                            ) { Text("+", fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()) }
+                        }
+                    }
+                    item {
+                        Text(
+                            text = "м/с²  •  диапазон 5–50",
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 4.dp),
+                            textAlign = TextAlign.Center,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Color(0xFF666666)
+                        )
                     }
                 }
             }

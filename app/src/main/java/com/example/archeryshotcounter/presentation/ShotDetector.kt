@@ -9,7 +9,8 @@ import kotlin.math.sqrt
 enum class Sensitivity(val labelRu: String, val threshold: Float) {
     HIGH("Высокая (8 м/с²)", 8f),
     MEDIUM("Средняя (13 м/с²)", 13f),
-    LOW("Низкая (20 м/с²)", 20f)
+    LOW("Низкая (20 м/с²)", 20f),
+    CUSTOM("Свой вариант", 0f)
 }
 
 /**
@@ -30,6 +31,7 @@ class ShotDetector(
     }
 
     var sensitivity = Sensitivity.MEDIUM
+    var customThreshold: Float = 15f
 
     private var lastShotTime = 0L
     private var isRunning = false
@@ -62,8 +64,9 @@ class ShotDetector(
         val raw = sqrt(x * x + y * y + z * z)
         val magnitude = if (useLinearAccel) raw else (raw - GRAVITY).coerceAtLeast(0f)
 
+        val threshold = if (sensitivity == Sensitivity.CUSTOM) customThreshold else sensitivity.threshold
         val now = System.currentTimeMillis()
-        if (magnitude > sensitivity.threshold && now - lastShotTime > COOLDOWN_MS) {
+        if (magnitude > threshold && now - lastShotTime > COOLDOWN_MS) {
             lastShotTime = now
             onShotDetected()
         }
