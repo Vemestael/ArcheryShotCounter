@@ -1,6 +1,5 @@
 package com.example.archeryshotcounter.presentation
 
-import android.content.Context
 import android.hardware.SensorManager
 import android.os.Build
 import android.os.Bundle
@@ -23,6 +22,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -37,7 +37,6 @@ import androidx.wear.compose.foundation.lazy.rememberTransformingLazyColumnState
 import androidx.wear.compose.material3.AppScaffold
 import androidx.wear.compose.material3.Button
 import androidx.wear.compose.material3.ButtonDefaults
-import androidx.wear.compose.material3.EdgeButton
 import androidx.wear.compose.material3.MaterialTheme
 import androidx.wear.compose.material3.ScreenScaffold
 import androidx.wear.compose.material3.SurfaceTransformation
@@ -51,7 +50,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var shotDetector: ShotDetector
     private lateinit var vibrator: Vibrator
 
-    private var shotCount by mutableStateOf(0)
+    private var shotCount by mutableIntStateOf(0)
     private var isDetecting by mutableStateOf(false)
     private var sensitivity by mutableStateOf(Sensitivity.MEDIUM)
 
@@ -61,7 +60,7 @@ class MainActivity : ComponentActivity() {
         val sensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
 
         vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            (getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager).defaultVibrator
+            (getSystemService(VIBRATOR_MANAGER_SERVICE) as VibratorManager).defaultVibrator
         } else {
             @Suppress("DEPRECATION")
             getSystemService(VIBRATOR_SERVICE) as Vibrator
@@ -138,43 +137,21 @@ fun ArcheryApp(
     val listState = rememberTransformingLazyColumnState()
     val transformationSpec = rememberTransformationSpec()
 
-    val green = Color(0xFF4CAF50)
-    val dimGray = Color(0xFF9E9E9E)
-    val statusColor = if (isDetecting) green else dimGray
+    val statusColor = if (isDetecting) Color(0xFF4CAF50) else Color(0xFF9E9E9E)
 
     AppScaffold {
-        ScreenScaffold(
-            scrollState = listState,
-            edgeButton = {
-                EdgeButton(
-                    onClick = onToggleDetection,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = if (isDetecting)
-                            MaterialTheme.colorScheme.error
-                        else
-                            MaterialTheme.colorScheme.primary,
-                        contentColor = if (isDetecting)
-                            MaterialTheme.colorScheme.onError
-                        else
-                            MaterialTheme.colorScheme.onPrimary
-                    )
-                ) {
-                    Text(if (isDetecting) "СТОП" else "СТАРТ")
-                }
-            }
-        ) { contentPadding ->
+        ScreenScaffold(scrollState = listState) { contentPadding ->
             TransformingLazyColumn(
                 contentPadding = contentPadding,
                 state = listState
             ) {
 
-                // Status row
+                // Статус
                 item {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .transformedHeight(this, transformationSpec)
-                            .padding(top = 8.dp),
+                            .padding(top = 12.dp, bottom = 4.dp),
                         horizontalArrangement = Arrangement.Center,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -192,12 +169,11 @@ fun ArcheryApp(
                     }
                 }
 
-                // Main counter
+                // Счётчик + подпись
                 item {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .transformedHeight(this, transformationSpec)
                             .padding(vertical = 4.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
@@ -211,35 +187,17 @@ fun ArcheryApp(
                         Text(
                             text = "выстрелов",
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = Color(0xFF9E9E9E)
                         )
                     }
                 }
 
-                // Reset button
-                item {
-                    Button(
-                        onClick = onReset,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .transformedHeight(this, transformationSpec),
-                        transformation = SurfaceTransformation(transformationSpec),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer
-                        )
-                    ) {
-                        Text("СБРОС")
-                    }
-                }
-
-                // Manual ±1 adjustment row
+                // −1 / +1
                 item {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .transformedHeight(this, transformationSpec)
-                            .padding(horizontal = 8.dp),
+                            .padding(horizontal = 8.dp, vertical = 4.dp),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Button(
@@ -261,24 +219,49 @@ fun ArcheryApp(
                     }
                 }
 
-                // Sensitivity section header
+                // СТАРТ / СТОП
+                item {
+                    Button(
+                        onClick = onToggleDetection,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .transformedHeight(this, transformationSpec),
+                        transformation = SurfaceTransformation(transformationSpec),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (isDetecting)
+                                MaterialTheme.colorScheme.error
+                            else
+                                MaterialTheme.colorScheme.primary,
+                            contentColor = if (isDetecting)
+                                MaterialTheme.colorScheme.onError
+                            else
+                                MaterialTheme.colorScheme.onPrimary
+                        )
+                    ) {
+                        Text(
+                            text = if (isDetecting) "СТОП" else "СТАРТ",
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+
+                // Заголовок чувствительности
                 item {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .transformedHeight(this, transformationSpec)
                             .padding(top = 12.dp, bottom = 2.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
                             text = "Чувствительность",
                             style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = Color(0xFF9E9E9E)
                         )
                     }
                 }
 
-                // Sensitivity buttons
+                // Кнопки чувствительности
                 Sensitivity.entries.forEach { s ->
                     item {
                         Button(
@@ -300,13 +283,29 @@ fun ArcheryApp(
                     }
                 }
 
-                // Bottom spacer
+                // Сброс
+                item {
+                    Button(
+                        onClick = onReset,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .transformedHeight(this, transformationSpec),
+                        transformation = SurfaceTransformation(transformationSpec),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                        )
+                    ) {
+                        Text("СБРОС")
+                    }
+                }
+
+                // Отступ снизу
                 item {
                     Spacer(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(16.dp)
-                            .transformedHeight(this, transformationSpec)
                     )
                 }
             }

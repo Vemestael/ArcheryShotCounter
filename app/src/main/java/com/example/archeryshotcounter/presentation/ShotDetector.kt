@@ -7,9 +7,9 @@ import android.hardware.SensorManager
 import kotlin.math.sqrt
 
 enum class Sensitivity(val labelRu: String, val threshold: Float) {
-    HIGH("Высокая", 8f),
-    MEDIUM("Средняя", 13f),
-    LOW("Низкая", 20f)
+    HIGH("Высокая (8 м/с²)", 8f),
+    MEDIUM("Средняя (13 м/с²)", 13f),
+    LOW("Низкая (20 м/с²)", 20f)
 }
 
 /**
