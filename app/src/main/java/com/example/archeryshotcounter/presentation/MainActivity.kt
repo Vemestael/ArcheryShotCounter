@@ -10,6 +10,7 @@ import android.os.Vibrator
 import android.os.VibratorManager
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
+import androidx.core.content.edit
 import java.util.Locale
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
@@ -56,6 +57,8 @@ import com.example.archeryshotcounter.presentation.theme.ArcheryShotCounterTheme
 
 private const val PREFS_NAME = "settings"
 private const val KEY_LANGUAGE = "language"
+private const val KEY_SENSITIVITY = "sensitivity"
+private const val KEY_CUSTOM_THRESHOLD = "custom_threshold"
 
 enum class AppLanguage(val code: String) {
     SYSTEM("system"),
@@ -89,7 +92,7 @@ class MainActivity : ComponentActivity() {
 
     private fun changeLanguage(lang: AppLanguage) {
         getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
-            .edit().putString(KEY_LANGUAGE, lang.code).apply()
+            .edit { putString(KEY_LANGUAGE, lang.code) }
         recreate()
     }
 
@@ -114,6 +117,13 @@ class MainActivity : ComponentActivity() {
             }
         }
 
+        val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+        sensitivity = Sensitivity.entries.find { it.name == prefs.getString(KEY_SENSITIVITY, null) }
+            ?: Sensitivity.MEDIUM
+        customThreshold = prefs.getInt(KEY_CUSTOM_THRESHOLD, 15)
+        shotDetector.sensitivity = sensitivity
+        shotDetector.customThreshold = customThreshold.toFloat()
+
         setContent {
             ArcheryShotCounterTheme {
                 ArcheryApp(
@@ -130,10 +140,14 @@ class MainActivity : ComponentActivity() {
                     onSensitivityChange = { s ->
                         sensitivity = s
                         shotDetector.sensitivity = s
+                        getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+                            .edit { putString(KEY_SENSITIVITY, s.name) }
                     },
                     onCustomThresholdChange = { value ->
                         customThreshold = value
                         shotDetector.customThreshold = value.toFloat()
+                        getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+                            .edit { putInt(KEY_CUSTOM_THRESHOLD, value) }
                     },
                     onLanguageChange = ::changeLanguage
                 )
