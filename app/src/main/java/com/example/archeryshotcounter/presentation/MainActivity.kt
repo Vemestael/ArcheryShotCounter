@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -34,9 +35,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.wear.compose.foundation.lazy.TransformingLazyColumn
 import androidx.wear.compose.foundation.lazy.rememberTransformingLazyColumnState
+import androidx.wear.compose.foundation.pager.HorizontalPager
+import androidx.wear.compose.foundation.pager.rememberPagerState
 import androidx.wear.compose.material3.AppScaffold
 import androidx.wear.compose.material3.Button
 import androidx.wear.compose.material3.ButtonDefaults
+import androidx.wear.compose.material3.HorizontalPageIndicator
 import androidx.wear.compose.material3.MaterialTheme
 import androidx.wear.compose.material3.ScreenScaffold
 import androidx.wear.compose.material3.SurfaceTransformation
@@ -134,180 +138,226 @@ fun ArcheryApp(
     onManualAdjust: (Int) -> Unit,
     onSensitivityChange: (Sensitivity) -> Unit
 ) {
+    val pagerState = rememberPagerState(pageCount = { 2 })
+    AppScaffold {
+        Box(modifier = Modifier.fillMaxSize()) {
+            HorizontalPager(state = pagerState) { page ->
+                when (page) {
+                    0 -> MainScreen(
+                        shotCount = shotCount,
+                        isDetecting = isDetecting,
+                        onToggleDetection = onToggleDetection,
+                        onReset = onReset,
+                        onManualAdjust = onManualAdjust
+                    )
+                    1 -> SettingsScreen(
+                        sensitivity = sensitivity,
+                        onSensitivityChange = onSensitivityChange
+                    )
+                }
+            }
+            HorizontalPageIndicator(
+                pagerState = pagerState,
+                modifier = Modifier.align(Alignment.TopCenter)
+            )
+        }
+    }
+}
+
+@Composable
+fun MainScreen(
+    shotCount: Int,
+    isDetecting: Boolean,
+    onToggleDetection: () -> Unit,
+    onReset: () -> Unit,
+    onManualAdjust: (Int) -> Unit
+) {
+    val listState = rememberTransformingLazyColumnState()
+    val transformationSpec = rememberTransformationSpec()
+    val statusColor = if (isDetecting) Color(0xFF4CAF50) else Color(0xFF9E9E9E)
+
+    ScreenScaffold(scrollState = listState) { contentPadding ->
+        TransformingLazyColumn(
+            contentPadding = contentPadding,
+            state = listState
+        ) {
+            item {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 12.dp, bottom = 4.dp),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(8.dp)
+                            .background(color = statusColor, shape = CircleShape)
+                    )
+                    Spacer(modifier = Modifier.size(6.dp))
+                    Text(
+                        text = if (isDetecting) "ОБНАРУЖЕНИЕ" else "ПАУЗА",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = statusColor
+                    )
+                }
+            }
+
+            item {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "$shotCount",
+                        fontSize = 72.sp,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Text(
+                        text = "выстрелов",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color(0xFF9E9E9E)
+                    )
+                }
+            }
+
+            item {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp, vertical = 4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Button(
+                        onClick = { onManualAdjust(-1) },
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF3A3A3A),
+                            contentColor = Color(0xFFCCCCCC)
+                        )
+                    ) {
+                        Text("−1", fontWeight = FontWeight.Bold)
+                    }
+                    Button(
+                        onClick = { onManualAdjust(1) },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("+1", fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+
+            item {
+                Button(
+                    onClick = onToggleDetection,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .transformedHeight(this, transformationSpec),
+                    transformation = SurfaceTransformation(transformationSpec),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (isDetecting)
+                            MaterialTheme.colorScheme.error
+                        else
+                            MaterialTheme.colorScheme.primary,
+                        contentColor = if (isDetecting)
+                            MaterialTheme.colorScheme.onError
+                        else
+                            MaterialTheme.colorScheme.onPrimary
+                    )
+                ) {
+                    Text(
+                        text = if (isDetecting) "СТОП" else "СТАРТ",
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+
+            item {
+                Button(
+                    onClick = onReset,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .transformedHeight(this, transformationSpec),
+                    transformation = SurfaceTransformation(transformationSpec),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                    )
+                ) {
+                    Text("СБРОС")
+                }
+            }
+
+            item {
+                Spacer(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(16.dp)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun SettingsScreen(
+    sensitivity: Sensitivity,
+    onSensitivityChange: (Sensitivity) -> Unit
+) {
     val listState = rememberTransformingLazyColumnState()
     val transformationSpec = rememberTransformationSpec()
 
-    val statusColor = if (isDetecting) Color(0xFF4CAF50) else Color(0xFF9E9E9E)
-
-    AppScaffold {
-        ScreenScaffold(scrollState = listState) { contentPadding ->
-            TransformingLazyColumn(
-                contentPadding = contentPadding,
-                state = listState
-            ) {
-
-                // Статус
-                item {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 12.dp, bottom = 4.dp),
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(8.dp)
-                                .background(color = statusColor, shape = CircleShape)
-                        )
-                        Spacer(modifier = Modifier.size(6.dp))
-                        Text(
-                            text = if (isDetecting) "ОБНАРУЖЕНИЕ" else "ПАУЗА",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = statusColor
-                        )
-                    }
-                }
-
-                // Счётчик + подпись
-                item {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 4.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(
-                            text = "$shotCount",
-                            fontSize = 72.sp,
-                            fontWeight = FontWeight.Bold,
-                            textAlign = TextAlign.Center,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                        Text(
-                            text = "выстрелов",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Color(0xFF9E9E9E)
-                        )
-                    }
-                }
-
-                // −1 / +1
-                item {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 8.dp, vertical = 4.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Button(
-                            onClick = { onManualAdjust(-1) },
-                            modifier = Modifier.weight(1f),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFF3A3A3A),
-                                contentColor = Color(0xFFCCCCCC)
-                            )
-                        ) {
-                            Text("−1", fontWeight = FontWeight.Bold)
-                        }
-                        Button(
-                            onClick = { onManualAdjust(1) },
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Text("+1", fontWeight = FontWeight.Bold)
-                        }
-                    }
-                }
-
-                // СТАРТ / СТОП
-                item {
-                    Button(
-                        onClick = onToggleDetection,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .transformedHeight(this, transformationSpec),
-                        transformation = SurfaceTransformation(transformationSpec),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (isDetecting)
-                                MaterialTheme.colorScheme.error
-                            else
-                                MaterialTheme.colorScheme.primary,
-                            contentColor = if (isDetecting)
-                                MaterialTheme.colorScheme.onError
-                            else
-                                MaterialTheme.colorScheme.onPrimary
-                        )
-                    ) {
-                        Text(
-                            text = if (isDetecting) "СТОП" else "СТАРТ",
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
-
-                // Заголовок чувствительности
-                item {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 12.dp, bottom = 2.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "Чувствительность",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = Color(0xFF9E9E9E)
-                        )
-                    }
-                }
-
-                // Кнопки чувствительности
-                Sensitivity.entries.forEach { s ->
-                    item {
-                        Button(
-                            onClick = { onSensitivityChange(s) },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .transformedHeight(this, transformationSpec),
-                            transformation = SurfaceTransformation(transformationSpec),
-                            colors = if (sensitivity == s)
-                                ButtonDefaults.buttonColors()
-                            else
-                                ButtonDefaults.buttonColors(
-                                    containerColor = Color(0xFF3A3A3A),
-                                    contentColor = Color(0xFFAAAAAA)
-                                )
-                        ) {
-                            Text(s.labelRu)
-                        }
-                    }
-                }
-
-                // Сброс
-                item {
-                    Button(
-                        onClick = onReset,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .transformedHeight(this, transformationSpec),
-                        transformation = SurfaceTransformation(transformationSpec),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer
-                        )
-                    ) {
-                        Text("СБРОС")
-                    }
-                }
-
-                // Отступ снизу
-                item {
-                    Spacer(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(16.dp)
+    ScreenScaffold(scrollState = listState) { contentPadding ->
+        TransformingLazyColumn(
+            contentPadding = contentPadding,
+            state = listState
+        ) {
+            item {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 12.dp, bottom = 8.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "Чувствительность",
+                        style = MaterialTheme.typography.titleSmall,
+                        color = Color(0xFFCCCCCC)
                     )
                 }
+            }
+
+            Sensitivity.entries.forEach { s ->
+                item {
+                    Button(
+                        onClick = { onSensitivityChange(s) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .transformedHeight(this, transformationSpec),
+                        transformation = SurfaceTransformation(transformationSpec),
+                        colors = if (sensitivity == s)
+                            ButtonDefaults.buttonColors()
+                        else
+                            ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFF3A3A3A),
+                                contentColor = Color(0xFFAAAAAA)
+                            )
+                    ) {
+                        Text(s.labelRu)
+                    }
+                }
+            }
+
+            item {
+                Spacer(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(16.dp)
+                )
             }
         }
     }
