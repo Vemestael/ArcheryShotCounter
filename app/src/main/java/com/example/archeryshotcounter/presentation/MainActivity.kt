@@ -335,7 +335,9 @@ fun MainScreen(
                 ) {
                     Text(
                         text = if (isDetecting) stringResource(R.string.btn_stop) else stringResource(R.string.btn_start),
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
                     )
                 }
             }
@@ -352,7 +354,7 @@ fun MainScreen(
                         contentColor = MaterialTheme.colorScheme.onSecondaryContainer
                     )
                 ) {
-                    Text(stringResource(R.string.btn_reset))
+                    Text(stringResource(R.string.btn_reset), textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
                 }
             }
 
@@ -415,7 +417,7 @@ fun SettingsScreen(
                                 contentColor = Color(0xFFAAAAAA)
                             )
                     ) {
-                        Text(stringResource(s.labelRes))
+                        Text(stringResource(s.labelRes), textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
                     }
                 }
 
@@ -502,7 +504,7 @@ fun SettingsScreen(
                                 contentColor = Color(0xFFAAAAAA)
                             )
                     ) {
-                        Text(label)
+                        Text(label, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
                     }
                 }
             }
