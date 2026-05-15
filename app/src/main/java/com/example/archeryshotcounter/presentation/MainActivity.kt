@@ -388,7 +388,7 @@ fun ArcheryApp(
             }
             HorizontalPageIndicator(
                 pagerState = pagerState,
-                modifier = Modifier.align(Alignment.TopCenter)
+                modifier = Modifier.align(Alignment.BottomCenter)
             )
             if (showLanguagePicker) {
                 LanguagePickerScreen(
