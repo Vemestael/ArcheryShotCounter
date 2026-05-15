@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">عداد الرماية</string>
+    <string name="app_name">Archery Shot Counter</string>
 
     <string name="status_ready">جاهز</string>
     <string name="status_detecting">كشف</string>

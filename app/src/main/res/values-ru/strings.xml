@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Счётчик выстрелов</string>
+    <string name="app_name">Archery Shot Counter</string>
 
     <string name="status_ready">Готово</string>
     <string name="status_detecting">Отслеживание</string>

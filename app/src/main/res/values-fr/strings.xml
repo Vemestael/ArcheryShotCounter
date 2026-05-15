@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Compteur de tir</string>
+    <string name="app_name">Archery Shot Counter</string>
 
     <string name="status_ready">Prêt</string>
     <string name="status_detecting">Détection</string>

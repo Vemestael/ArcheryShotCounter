@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">射箭计数器</string>
+    <string name="app_name">Archery Shot Counter</string>
 
     <string name="status_ready">就绪</string>
     <string name="status_detecting">检测中</string>

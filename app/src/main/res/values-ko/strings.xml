@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">양궁 카운터</string>
+    <string name="app_name">Archery Shot Counter</string>
 
     <string name="status_ready">준비</string>
     <string name="status_detecting">감지 중</string>

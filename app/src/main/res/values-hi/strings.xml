@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">तीरंदाजी काउंटर</string>
+    <string name="app_name">Archery Shot Counter</string>
 
     <string name="status_ready">तैयार</string>
     <string name="status_detecting">पहचान</string>
