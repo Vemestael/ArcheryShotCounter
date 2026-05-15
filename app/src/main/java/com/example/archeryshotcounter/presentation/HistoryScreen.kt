@@ -23,6 +23,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -44,7 +45,7 @@ import com.example.archeryshotcounter.R
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
-import java.util.Locale
+
 
 private sealed class HistoryListItem {
     data class SessionItem(
@@ -70,7 +71,8 @@ fun HistoryScreen(
 
     val historyItems = buildHistoryItems(sessions, currentSession, activeShotCount)
     val timeFormat = remember(context) { AndroidDateFormat.getTimeFormat(context) }
-    val dateFormat = remember { SimpleDateFormat("d MMM", Locale.getDefault()) }
+    val locale = LocalConfiguration.current.locales[0]
+    val dateFormat = remember(locale) { SimpleDateFormat("d MMM", locale) }
 
     ScreenScaffold(scrollState = listState) { contentPadding ->
         TransformingLazyColumn(
@@ -222,8 +224,9 @@ private fun EditSessionDialog(
     onDismiss: () -> Unit
 ) {
     var count by remember { mutableIntStateOf(session.shotCount) }
-    val dateFormat = remember { SimpleDateFormat("d MMM", Locale.getDefault()) }
-    val dateText = remember(session) { dateFormat.format(Date(session.startTime)) }
+    val locale = LocalConfiguration.current.locales[0]
+    val dateFormat = remember(locale) { SimpleDateFormat("d MMM", locale) }
+    val dateText = remember(session, locale) { dateFormat.format(Date(session.startTime)) }
 
     Dialog(onDismissRequest = onDismiss) {
         Column(
