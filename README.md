@@ -82,12 +82,12 @@ MIT — see [LICENSE](LICENSE).
 ## Screenshots (Photos)
 
 ### Training sessions screen
-[sessionHistory](assets/sessionHistory.jpg)
+![sessionHistory](assets/sessionHistory.jpg)
 
 ### Main screen
-[main](assets/main.jpg)
-[main2](assets/main2.jpg)
+![main](assets/main.jpg)
+![main2](assets/main2.jpg)
 
 ### Settings screen
 
-[settings](assets/settings.jpg)
+![settings](assets/settings.jpg)
