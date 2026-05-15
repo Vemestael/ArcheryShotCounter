@@ -1,0 +1,27 @@
+<resources>
+    <string name="app_name">射箭计数器</string>
+
+    <string name="status_ready">就绪</string>
+    <string name="status_detecting">检测中</string>
+    <string name="status_paused">已暂停</string>
+    <string name="shots_label">箭</string>
+
+    <string name="btn_start">开始</string>
+    <string name="btn_stop">暂停</string>
+    <string name="btn_resume">继续</string>
+    <string name="btn_reset">结束</string>
+
+    <string name="history_empty">暂无训练记录</string>
+    <string name="dialog_save">保存</string>
+    <string name="dialog_delete">删除</string>
+
+    <string name="sensitivity_title">灵敏度</string>
+    <string name="sensitivity_range">m/s²  •  范围 5–50</string>
+    <string name="sensitivity_high">高 (8 m/s²)</string>
+    <string name="sensitivity_medium">中 (13 m/s²)</string>
+    <string name="sensitivity_low">低 (20 m/s²)</string>
+    <string name="sensitivity_custom">自定义</string>
+
+    <string name="lang_section_title">语言</string>
+    <string name="lang_system">系统</string>
+</resources>

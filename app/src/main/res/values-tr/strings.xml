@@ -1,0 +1,27 @@
+<resources>
+    <string name="app_name">Okçuluk Sayacı</string>
+
+    <string name="status_ready">Hazır</string>
+    <string name="status_detecting">Algılıyor</string>
+    <string name="status_paused">Duraklatıldı</string>
+    <string name="shots_label">atış</string>
+
+    <string name="btn_start">Başlat</string>
+    <string name="btn_stop">Duraklat</string>
+    <string name="btn_resume">Devam Et</string>
+    <string name="btn_reset">Bitir</string>
+
+    <string name="history_empty">Henüz oturum yok</string>
+    <string name="dialog_save">Kaydet</string>
+    <string name="dialog_delete">Sil</string>
+
+    <string name="sensitivity_title">Hassasiyet</string>
+    <string name="sensitivity_range">m/s²  •  aralık 5–50</string>
+    <string name="sensitivity_high">Yüksek (8 m/s²)</string>
+    <string name="sensitivity_medium">Orta (13 m/s²)</string>
+    <string name="sensitivity_low">Düşük (20 m/s²)</string>
+    <string name="sensitivity_custom">Özel</string>
+
+    <string name="lang_section_title">Dil</string>
+    <string name="lang_system">Sistem</string>
+</resources>

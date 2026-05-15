@@ -1,0 +1,27 @@
+<resources>
+    <string name="app_name">Compteur de tir</string>
+
+    <string name="status_ready">Prêt</string>
+    <string name="status_detecting">Détection</string>
+    <string name="status_paused">En pause</string>
+    <string name="shots_label">tirs</string>
+
+    <string name="btn_start">Démarrer</string>
+    <string name="btn_stop">Pause</string>
+    <string name="btn_resume">Reprendre</string>
+    <string name="btn_reset">Fin</string>
+
+    <string name="history_empty">Aucune séance</string>
+    <string name="dialog_save">Enregistrer</string>
+    <string name="dialog_delete">Supprimer</string>
+
+    <string name="sensitivity_title">Sensibilité</string>
+    <string name="sensitivity_range">m/s²  •  plage 5–50</string>
+    <string name="sensitivity_high">Haute (8 m/s²)</string>
+    <string name="sensitivity_medium">Moyenne (13 m/s²)</string>
+    <string name="sensitivity_low">Basse (20 m/s²)</string>
+    <string name="sensitivity_custom">Personnalisé</string>
+
+    <string name="lang_section_title">Langue</string>
+    <string name="lang_system">Système</string>
+</resources>

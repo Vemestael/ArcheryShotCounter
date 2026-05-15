@@ -10,6 +10,7 @@ import android.os.Vibrator
 import android.os.VibratorManager
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.mutableStateListOf
 import androidx.core.content.edit
 import java.util.Locale
@@ -30,6 +31,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.res.stringResource
@@ -65,10 +67,20 @@ private const val KEY_PENDING_START = "pending_start"
 private const val KEY_PENDING_LAST = "pending_last"
 private const val KEY_PENDING_COUNT = "pending_count"
 
-enum class AppLanguage(val code: String) {
-    SYSTEM("system"),
-    ENGLISH("en"),
-    RUSSIAN("ru")
+enum class AppLanguage(val code: String, val nativeName: String, val englishName: String) {
+    SYSTEM("system", "", "System"),
+    ENGLISH("en", "English", "English"),
+    RUSSIAN("ru", "Русский", "Russian"),
+    SPANISH("es", "Español", "Spanish"),
+    FRENCH("fr", "Français", "French"),
+    GERMAN("de", "Deutsch", "German"),
+    PORTUGUESE("pt", "Português", "Portuguese"),
+    CHINESE("zh", "中文", "Chinese"),
+    JAPANESE("ja", "日本語", "Japanese"),
+    KOREAN("ko", "한국어", "Korean"),
+    ARABIC("ar", "العربية", "Arabic"),
+    TURKISH("tr", "Türkçe", "Turkish"),
+    HINDI("hi", "हिन्दी", "Hindi")
 }
 
 class MainActivity : ComponentActivity() {
@@ -343,6 +355,7 @@ fun ArcheryApp(
     onDeleteSession: (Session) -> Unit
 ) {
     val pagerState = rememberPagerState(initialPage = 1, pageCount = { 3 })
+    var showLanguagePicker by remember { mutableStateOf(false) }
     AppScaffold {
         Box(modifier = Modifier.fillMaxSize()) {
             HorizontalPager(state = pagerState) { page ->
@@ -368,7 +381,7 @@ fun ArcheryApp(
                         currentLanguage = currentLanguage,
                         onSensitivityChange = onSensitivityChange,
                         onCustomThresholdChange = onCustomThresholdChange,
-                        onLanguageChange = onLanguageChange
+                        onShowLanguagePicker = { showLanguagePicker = true }
                     )
                 }
             }
@@ -376,6 +389,16 @@ fun ArcheryApp(
                 pagerState = pagerState,
                 modifier = Modifier.align(Alignment.TopCenter)
             )
+            if (showLanguagePicker) {
+                LanguagePickerScreen(
+                    currentLanguage = currentLanguage,
+                    onSelect = { lang ->
+                        showLanguagePicker = false
+                        onLanguageChange(lang)
+                    },
+                    onDismiss = { showLanguagePicker = false }
+                )
+            }
         }
     }
 }
@@ -550,7 +573,7 @@ fun SettingsScreen(
     currentLanguage: AppLanguage,
     onSensitivityChange: (Sensitivity) -> Unit,
     onCustomThresholdChange: (Int) -> Unit,
-    onLanguageChange: (AppLanguage) -> Unit
+    onShowLanguagePicker: () -> Unit
 ) {
     val listState = rememberTransformingLazyColumnState()
     val transformationSpec = rememberTransformationSpec()
@@ -657,29 +680,23 @@ fun SettingsScreen(
                 }
             }
 
-            AppLanguage.entries.forEach { lang ->
-                item {
-                    val label = when (lang) {
-                        AppLanguage.SYSTEM -> stringResource(R.string.lang_system)
-                        AppLanguage.ENGLISH -> "English"
-                        AppLanguage.RUSSIAN -> "Русский"
-                    }
-                    Button(
-                        onClick = { onLanguageChange(lang) },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .transformedHeight(this, transformationSpec),
-                        transformation = SurfaceTransformation(transformationSpec),
-                        colors = if (currentLanguage == lang)
-                            ButtonDefaults.buttonColors()
-                        else
-                            ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFF3A3A3A),
-                                contentColor = Color(0xFFAAAAAA)
-                            )
-                    ) {
-                        Text(label, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
-                    }
+            item {
+                val currentLabel = if (currentLanguage == AppLanguage.SYSTEM)
+                    stringResource(R.string.lang_system)
+                else
+                    currentLanguage.nativeName
+                Button(
+                    onClick = onShowLanguagePicker,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .transformedHeight(this, transformationSpec),
+                    transformation = SurfaceTransformation(transformationSpec),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF3A3A3A),
+                        contentColor = Color(0xFFCCCCCC)
+                    )
+                ) {
+                    Text(currentLabel, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
                 }
             }
 
@@ -689,6 +706,83 @@ fun SettingsScreen(
                         .fillMaxWidth()
                         .height(16.dp)
                 )
+            }
+        }
+    }
+}
+
+@Composable
+fun LanguagePickerScreen(
+    currentLanguage: AppLanguage,
+    onSelect: (AppLanguage) -> Unit,
+    onDismiss: () -> Unit
+) {
+    BackHandler(onBack = onDismiss)
+    val listState = rememberTransformingLazyColumnState()
+    val transformationSpec = rememberTransformationSpec()
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+    ) {
+        ScreenScaffold(scrollState = listState) { contentPadding ->
+            TransformingLazyColumn(
+                contentPadding = contentPadding,
+                state = listState
+            ) {
+                AppLanguage.entries.forEach { lang ->
+                    item {
+                        val mainName = if (lang == AppLanguage.SYSTEM)
+                            stringResource(R.string.lang_system)
+                        else
+                            lang.nativeName
+                        val subtitle = if (lang != AppLanguage.SYSTEM && lang.nativeName != lang.englishName)
+                            lang.englishName
+                        else
+                            null
+                        Button(
+                            onClick = { onSelect(lang) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .transformedHeight(this, transformationSpec),
+                            transformation = SurfaceTransformation(transformationSpec),
+                            colors = if (currentLanguage == lang)
+                                ButtonDefaults.buttonColors()
+                            else
+                                ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFF3A3A3A),
+                                    contentColor = Color(0xFFAAAAAA)
+                                )
+                        ) {
+                            Column(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Text(
+                                    text = mainName,
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                                if (subtitle != null) {
+                                    Text(
+                                        text = subtitle,
+                                        textAlign = TextAlign.Center,
+                                        modifier = Modifier.fillMaxWidth(),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = if (currentLanguage == lang)
+                                            MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.6f)
+                                        else
+                                            Color(0xFF666666)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+                item {
+                    Spacer(modifier = Modifier.fillMaxWidth().height(16.dp))
+                }
             }
         }
     }

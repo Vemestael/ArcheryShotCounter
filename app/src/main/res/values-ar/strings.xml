@@ -1,0 +1,27 @@
+<resources>
+    <string name="app_name">عداد الرماية</string>
+
+    <string name="status_ready">جاهز</string>
+    <string name="status_detecting">كشف</string>
+    <string name="status_paused">متوقف</string>
+    <string name="shots_label">رمية</string>
+
+    <string name="btn_start">بدء</string>
+    <string name="btn_stop">إيقاف</string>
+    <string name="btn_resume">استئناف</string>
+    <string name="btn_reset">إنهاء</string>
+
+    <string name="history_empty">لا توجد جلسات</string>
+    <string name="dialog_save">حفظ</string>
+    <string name="dialog_delete">حذف</string>
+
+    <string name="sensitivity_title">الحساسية</string>
+    <string name="sensitivity_range">م/ث²  •  النطاق 5–50</string>
+    <string name="sensitivity_high">عالية (8 م/ث²)</string>
+    <string name="sensitivity_medium">متوسطة (13 م/ث²)</string>
+    <string name="sensitivity_low">منخفضة (20 م/ث²)</string>
+    <string name="sensitivity_custom">مخصص</string>
+
+    <string name="lang_section_title">اللغة</string>
+    <string name="lang_system">النظام</string>
+</resources>

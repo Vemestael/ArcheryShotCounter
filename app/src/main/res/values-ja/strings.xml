@@ -1,0 +1,27 @@
+<resources>
+    <string name="app_name">アーチェリーカウンター</string>
+
+    <string name="status_ready">準備完了</string>
+    <string name="status_detecting">検出中</string>
+    <string name="status_paused">一時停止</string>
+    <string name="shots_label">射</string>
+
+    <string name="btn_start">開始</string>
+    <string name="btn_stop">一時停止</string>
+    <string name="btn_resume">再開</string>
+    <string name="btn_reset">終了</string>
+
+    <string name="history_empty">セッションなし</string>
+    <string name="dialog_save">保存</string>
+    <string name="dialog_delete">削除</string>
+
+    <string name="sensitivity_title">感度</string>
+    <string name="sensitivity_range">m/s²  •  範囲 5–50</string>
+    <string name="sensitivity_high">高 (8 m/s²)</string>
+    <string name="sensitivity_medium">中 (13 m/s²)</string>
+    <string name="sensitivity_low">低 (20 m/s²)</string>
+    <string name="sensitivity_custom">カスタム</string>
+
+    <string name="lang_section_title">言語</string>
+    <string name="lang_system">システム</string>
+</resources>

@@ -1,0 +1,27 @@
+<resources>
+    <string name="app_name">Bogenschießen Zähler</string>
+
+    <string name="status_ready">Bereit</string>
+    <string name="status_detecting">Erkennung</string>
+    <string name="status_paused">Pausiert</string>
+    <string name="shots_label">Schüsse</string>
+
+    <string name="btn_start">Start</string>
+    <string name="btn_stop">Pause</string>
+    <string name="btn_resume">Fortsetzen</string>
+    <string name="btn_reset">Ende</string>
+
+    <string name="history_empty">Keine Trainings</string>
+    <string name="dialog_save">Speichern</string>
+    <string name="dialog_delete">Löschen</string>
+
+    <string name="sensitivity_title">Empfindlichkeit</string>
+    <string name="sensitivity_range">m/s²  •  Bereich 5–50</string>
+    <string name="sensitivity_high">Hoch (8 m/s²)</string>
+    <string name="sensitivity_medium">Mittel (13 m/s²)</string>
+    <string name="sensitivity_low">Niedrig (20 m/s²)</string>
+    <string name="sensitivity_custom">Benutzerdefiniert</string>
+
+    <string name="lang_section_title">Sprache</string>
+    <string name="lang_system">System</string>
+</resources>

@@ -1,0 +1,27 @@
+<resources>
+    <string name="app_name">Contador de tiro</string>
+
+    <string name="status_ready">Pronto</string>
+    <string name="status_detecting">Detectando</string>
+    <string name="status_paused">Pausado</string>
+    <string name="shots_label">disparos</string>
+
+    <string name="btn_start">Iniciar</string>
+    <string name="btn_stop">Pausar</string>
+    <string name="btn_resume">Retomar</string>
+    <string name="btn_reset">Fim</string>
+
+    <string name="history_empty">Sem sessões ainda</string>
+    <string name="dialog_save">Salvar</string>
+    <string name="dialog_delete">Excluir</string>
+
+    <string name="sensitivity_title">Sensibilidade</string>
+    <string name="sensitivity_range">m/s²  •  intervalo 5–50</string>
+    <string name="sensitivity_high">Alta (8 m/s²)</string>
+    <string name="sensitivity_medium">Média (13 m/s²)</string>
+    <string name="sensitivity_low">Baixa (20 m/s²)</string>
+    <string name="sensitivity_custom">Personalizado</string>
+
+    <string name="lang_section_title">Idioma</string>
+    <string name="lang_system">Sistema</string>
+</resources>

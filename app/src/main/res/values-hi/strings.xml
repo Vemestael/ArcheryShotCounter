@@ -1,0 +1,27 @@
+<resources>
+    <string name="app_name">तीरंदाजी काउंटर</string>
+
+    <string name="status_ready">तैयार</string>
+    <string name="status_detecting">पहचान</string>
+    <string name="status_paused">रुका हुआ</string>
+    <string name="shots_label">तीर</string>
+
+    <string name="btn_start">शुरू</string>
+    <string name="btn_stop">रोकें</string>
+    <string name="btn_resume">जारी रखें</string>
+    <string name="btn_reset">समाप्त</string>
+
+    <string name="history_empty">कोई सत्र नहीं</string>
+    <string name="dialog_save">सहेजें</string>
+    <string name="dialog_delete">हटाएं</string>
+
+    <string name="sensitivity_title">संवेदनशीलता</string>
+    <string name="sensitivity_range">m/s²  •  सीमा 5–50</string>
+    <string name="sensitivity_high">उच्च (8 m/s²)</string>
+    <string name="sensitivity_medium">मध्यम (13 m/s²)</string>
+    <string name="sensitivity_low">कम (20 m/s²)</string>
+    <string name="sensitivity_custom">कस्टम</string>
+
+    <string name="lang_section_title">भाषा</string>
+    <string name="lang_system">सिस्टम</string>
+</resources>
