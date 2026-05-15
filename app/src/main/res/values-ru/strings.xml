@@ -1,13 +1,19 @@
 <resources>
     <string name="app_name">Счётчик выстрелов</string>
 
-    <string name="status_detecting">ОБНАРУЖЕНИЕ</string>
+    <string name="status_ready">ГОТОВО</string>
+    <string name="status_detecting">ОТСЛЕЖИВАНИЕ</string>
     <string name="status_paused">ПАУЗА</string>
     <string name="shots_label">выстрелов</string>
 
     <string name="btn_start">СТАРТ</string>
-    <string name="btn_stop">СТОП</string>
-    <string name="btn_reset">СБРОС</string>
+    <string name="btn_stop">ПАУЗА</string>
+    <string name="btn_resume">ПРОДОЛЖИТЬ</string>
+    <string name="btn_reset">КОНЕЦ</string>
+
+    <string name="history_empty">Нет тренировок</string>
+    <string name="dialog_save">Сохранить</string>
+    <string name="dialog_delete">Удалить</string>
 
     <string name="sensitivity_title">Чувствительность</string>
     <string name="sensitivity_range">м/с²  •  диапазон 5–50</string>

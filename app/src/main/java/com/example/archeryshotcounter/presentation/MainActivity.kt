@@ -10,6 +10,7 @@ import android.os.Vibrator
 import android.os.VibratorManager
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
+import androidx.compose.runtime.mutableStateListOf
 import androidx.core.content.edit
 import java.util.Locale
 import androidx.activity.compose.setContent
@@ -59,6 +60,10 @@ private const val PREFS_NAME = "settings"
 private const val KEY_LANGUAGE = "language"
 private const val KEY_SENSITIVITY = "sensitivity"
 private const val KEY_CUSTOM_THRESHOLD = "custom_threshold"
+private const val KEY_PENDING_ID = "pending_id"
+private const val KEY_PENDING_START = "pending_start"
+private const val KEY_PENDING_LAST = "pending_last"
+private const val KEY_PENDING_COUNT = "pending_count"
 
 enum class AppLanguage(val code: String) {
     SYSTEM("system"),
@@ -70,9 +75,13 @@ class MainActivity : ComponentActivity() {
 
     private lateinit var shotDetector: ShotDetector
     private lateinit var vibrator: Vibrator
+    private lateinit var sessionStorage: SessionStorage
 
     private var shotCount by mutableIntStateOf(0)
     private var isDetecting by mutableStateOf(false)
+    private var currentSession by mutableStateOf<Session?>(null)
+    private val sessions = mutableStateListOf<Session>()
+
     private var sensitivity by mutableStateOf(Sensitivity.MEDIUM)
     private var customThreshold by mutableIntStateOf(15)
     private var currentLanguage by mutableStateOf(AppLanguage.SYSTEM)
@@ -100,6 +109,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         val sensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
+        sessionStorage = SessionStorage(this)
 
         vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             (getSystemService(VIBRATOR_MANAGER_SERVICE) as VibratorManager).defaultVibrator
@@ -111,9 +121,8 @@ class MainActivity : ComponentActivity() {
         shotDetector = ShotDetector(sensorManager) {
             runOnUiThread {
                 shotCount++
-                vibrator.vibrate(
-                    VibrationEffect.createOneShot(150, VibrationEffect.DEFAULT_AMPLITUDE)
-                )
+                vibrator.vibrate(VibrationEffect.createOneShot(150, VibrationEffect.DEFAULT_AMPLITUDE))
+                recordShot()
             }
         }
 
@@ -124,19 +133,33 @@ class MainActivity : ComponentActivity() {
         shotDetector.sensitivity = sensitivity
         shotDetector.customThreshold = customThreshold.toFloat()
 
+        sessions.addAll(sessionStorage.load())
+
+        val pendingId = prefs.getLong(KEY_PENDING_ID, -1L)
+        if (pendingId != -1L) {
+            val restored = Session(
+                id = pendingId,
+                startTime = prefs.getLong(KEY_PENDING_START, pendingId),
+                lastShotTime = prefs.getLong(KEY_PENDING_LAST, pendingId),
+                shotCount = prefs.getInt(KEY_PENDING_COUNT, 0)
+            )
+            currentSession = restored
+            shotCount = restored.shotCount
+        }
+
         setContent {
             ArcheryShotCounterTheme {
                 ArcheryApp(
                     shotCount = shotCount,
                     isDetecting = isDetecting,
+                    currentSession = currentSession,
+                    sessions = sessions,
                     sensitivity = sensitivity,
                     customThreshold = customThreshold,
                     currentLanguage = currentLanguage,
-                    onToggleDetection = ::toggleDetection,
-                    onReset = { shotCount = 0 },
-                    onManualAdjust = { delta ->
-                        shotCount = (shotCount + delta).coerceAtLeast(0)
-                    },
+                    onStartOrToggle = ::startOrToggleSession,
+                    onEnd = ::endSession,
+                    onManualAdjust = ::manualAdjust,
                     onSensitivityChange = { s ->
                         sensitivity = s
                         shotDetector.sensitivity = s
@@ -149,22 +172,118 @@ class MainActivity : ComponentActivity() {
                         getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
                             .edit { putInt(KEY_CUSTOM_THRESHOLD, value) }
                     },
-                    onLanguageChange = ::changeLanguage
+                    onLanguageChange = ::changeLanguage,
+                    onEditSession = ::editSession,
+                    onDeleteSession = ::deleteSession
                 )
             }
         }
     }
 
-    private fun toggleDetection() {
-        if (isDetecting) {
-            isDetecting = false
-            shotDetector.stop()
-            window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-        } else {
-            shotDetector.sensitivity = sensitivity
-            shotDetector.start()
-            isDetecting = true
-            window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+    private fun startOrToggleSession() {
+        when {
+            currentSession == null -> {
+                val now = System.currentTimeMillis()
+                currentSession = Session(id = now, startTime = now, lastShotTime = now, shotCount = shotCount)
+                startDetection()
+            }
+            isDetecting -> stopDetection()
+            else -> startDetection()
+        }
+    }
+
+    private fun startDetection() {
+        shotDetector.sensitivity = sensitivity
+        shotDetector.customThreshold = customThreshold.toFloat()
+        shotDetector.start()
+        isDetecting = true
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+    }
+
+    private fun stopDetection() {
+        shotDetector.stop()
+        isDetecting = false
+        window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+    }
+
+    private fun endSession() {
+        if (isDetecting) stopDetection()
+        val session = currentSession ?: return
+        if (shotCount > 0) {
+            val updated = session.copy(lastShotTime = System.currentTimeMillis(), shotCount = shotCount)
+            val idx = sessions.indexOfFirst { it.id == updated.id }
+            if (idx >= 0) sessions[idx] = updated else sessions.add(0, updated)
+            sessionStorage.save(sessions.toList())
+        }
+        currentSession = null
+        shotCount = 0
+        clearPendingSession()
+    }
+
+    private fun recordShot() {
+        val session = currentSession ?: return
+        val updated = session.copy(lastShotTime = System.currentTimeMillis(), shotCount = shotCount)
+        currentSession = updated
+        val idx = sessions.indexOfFirst { it.id == updated.id }
+        if (idx >= 0) sessions[idx] = updated else sessions.add(0, updated)
+        sessionStorage.save(sessions.toList())
+    }
+
+    private fun manualAdjust(delta: Int) {
+        val newCount = (shotCount + delta).coerceAtLeast(0)
+        shotCount = newCount
+        if (delta > 0) {
+            if (currentSession == null) {
+                val now = System.currentTimeMillis()
+                currentSession = Session(id = now, startTime = now, lastShotTime = now, shotCount = newCount)
+            }
+            val session = currentSession!!
+            val updated = session.copy(lastShotTime = System.currentTimeMillis(), shotCount = newCount)
+            currentSession = updated
+            val idx = sessions.indexOfFirst { it.id == updated.id }
+            if (idx >= 0) sessions[idx] = updated else sessions.add(0, updated)
+            sessionStorage.save(sessions.toList())
+        } else if (delta < 0 && currentSession != null) {
+            val session = currentSession!!
+            val updated = session.copy(shotCount = newCount)
+            currentSession = updated
+            val idx = sessions.indexOfFirst { it.id == updated.id }
+            if (idx >= 0) {
+                sessions[idx] = updated
+                sessionStorage.save(sessions.toList())
+            }
+        }
+    }
+
+    private fun editSession(updated: Session) {
+        val idx = sessions.indexOfFirst { it.id == updated.id }
+        if (idx >= 0) {
+            sessions[idx] = updated
+            sessionStorage.save(sessions.toList())
+        }
+        if (currentSession?.id == updated.id) {
+            currentSession = updated
+            shotCount = updated.shotCount
+        }
+    }
+
+    private fun deleteSession(session: Session) {
+        sessions.removeIf { it.id == session.id }
+        sessionStorage.save(sessions.toList())
+        if (currentSession?.id == session.id) {
+            if (isDetecting) stopDetection()
+            currentSession = null
+            shotCount = 0
+            clearPendingSession()
+        }
+    }
+
+    private fun clearPendingSession() {
+        getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit {
+            remove(KEY_PENDING_ID)
+            remove(KEY_PENDING_START)
+            remove(KEY_PENDING_LAST)
+            remove(KEY_PENDING_COUNT)
         }
     }
 
@@ -178,6 +297,21 @@ class MainActivity : ComponentActivity() {
         if (isDetecting) shotDetector.start()
     }
 
+    override fun onStop() {
+        super.onStop()
+        val session = currentSession
+        if (session != null && shotCount > 0) {
+            getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit {
+                putLong(KEY_PENDING_ID, session.id)
+                putLong(KEY_PENDING_START, session.startTime)
+                putLong(KEY_PENDING_LAST, session.lastShotTime)
+                putInt(KEY_PENDING_COUNT, shotCount)
+            }
+        } else {
+            clearPendingSession()
+        }
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         shotDetector.stop()
@@ -188,29 +322,41 @@ class MainActivity : ComponentActivity() {
 fun ArcheryApp(
     shotCount: Int,
     isDetecting: Boolean,
+    currentSession: Session?,
+    sessions: List<Session>,
     sensitivity: Sensitivity,
     customThreshold: Int,
     currentLanguage: AppLanguage,
-    onToggleDetection: () -> Unit,
-    onReset: () -> Unit,
+    onStartOrToggle: () -> Unit,
+    onEnd: () -> Unit,
     onManualAdjust: (Int) -> Unit,
     onSensitivityChange: (Sensitivity) -> Unit,
     onCustomThresholdChange: (Int) -> Unit,
-    onLanguageChange: (AppLanguage) -> Unit
+    onLanguageChange: (AppLanguage) -> Unit,
+    onEditSession: (Session) -> Unit,
+    onDeleteSession: (Session) -> Unit
 ) {
-    val pagerState = rememberPagerState(pageCount = { 2 })
+    val pagerState = rememberPagerState(initialPage = 1, pageCount = { 3 })
     AppScaffold {
         Box(modifier = Modifier.fillMaxSize()) {
             HorizontalPager(state = pagerState) { page ->
                 when (page) {
-                    0 -> MainScreen(
+                    0 -> HistoryScreen(
+                        sessions = sessions,
+                        currentSession = currentSession,
+                        activeShotCount = shotCount,
+                        onEdit = onEditSession,
+                        onDelete = onDeleteSession
+                    )
+                    1 -> MainScreen(
                         shotCount = shotCount,
                         isDetecting = isDetecting,
-                        onToggleDetection = onToggleDetection,
-                        onReset = onReset,
+                        currentSession = currentSession,
+                        onStartOrToggle = onStartOrToggle,
+                        onEnd = onEnd,
                         onManualAdjust = onManualAdjust
                     )
-                    1 -> SettingsScreen(
+                    2 -> SettingsScreen(
                         sensitivity = sensitivity,
                         customThreshold = customThreshold,
                         currentLanguage = currentLanguage,
@@ -232,13 +378,38 @@ fun ArcheryApp(
 fun MainScreen(
     shotCount: Int,
     isDetecting: Boolean,
-    onToggleDetection: () -> Unit,
-    onReset: () -> Unit,
+    currentSession: Session?,
+    onStartOrToggle: () -> Unit,
+    onEnd: () -> Unit,
     onManualAdjust: (Int) -> Unit
 ) {
     val listState = rememberTransformingLazyColumnState()
     val transformationSpec = rememberTransformationSpec()
-    val statusColor = if (isDetecting) Color(0xFF4CAF50) else Color(0xFF9E9E9E)
+
+    val sessionExists = currentSession != null
+    val statusText = when {
+        !sessionExists -> stringResource(R.string.status_ready)
+        isDetecting -> stringResource(R.string.status_detecting)
+        else -> stringResource(R.string.status_paused)
+    }
+    val statusColor = when {
+        !sessionExists -> Color(0xFF9E9E9E)
+        isDetecting -> Color(0xFF4CAF50)
+        else -> Color(0xFFFFC107)
+    }
+    val primaryButtonLabel = when {
+        !sessionExists -> stringResource(R.string.btn_start)
+        isDetecting -> stringResource(R.string.btn_stop)
+        else -> stringResource(R.string.btn_resume)
+    }
+    val primaryButtonContainerColor = if (isDetecting && sessionExists)
+        MaterialTheme.colorScheme.error
+    else
+        MaterialTheme.colorScheme.primary
+    val primaryButtonContentColor = if (isDetecting && sessionExists)
+        MaterialTheme.colorScheme.onError
+    else
+        MaterialTheme.colorScheme.onPrimary
 
     ScreenScaffold(scrollState = listState) { contentPadding ->
         TransformingLazyColumn(
@@ -260,7 +431,7 @@ fun MainScreen(
                     )
                     Spacer(modifier = Modifier.size(6.dp))
                     Text(
-                        text = if (isDetecting) stringResource(R.string.status_detecting) else stringResource(R.string.status_paused),
+                        text = statusText,
                         style = MaterialTheme.typography.labelSmall,
                         color = statusColor
                     )
@@ -317,24 +488,18 @@ fun MainScreen(
 
             item {
                 Button(
-                    onClick = onToggleDetection,
+                    onClick = onStartOrToggle,
                     modifier = Modifier
                         .fillMaxWidth()
                         .transformedHeight(this, transformationSpec),
                     transformation = SurfaceTransformation(transformationSpec),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = if (isDetecting)
-                            MaterialTheme.colorScheme.error
-                        else
-                            MaterialTheme.colorScheme.primary,
-                        contentColor = if (isDetecting)
-                            MaterialTheme.colorScheme.onError
-                        else
-                            MaterialTheme.colorScheme.onPrimary
+                        containerColor = primaryButtonContainerColor,
+                        contentColor = primaryButtonContentColor
                     )
                 ) {
                     Text(
-                        text = if (isDetecting) stringResource(R.string.btn_stop) else stringResource(R.string.btn_start),
+                        text = primaryButtonLabel,
                         fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.fillMaxWidth()
@@ -344,14 +509,17 @@ fun MainScreen(
 
             item {
                 Button(
-                    onClick = onReset,
+                    onClick = onEnd,
+                    enabled = sessionExists,
                     modifier = Modifier
                         .fillMaxWidth()
                         .transformedHeight(this, transformationSpec),
                     transformation = SurfaceTransformation(transformationSpec),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                        disabledContainerColor = Color(0xFF2A2A2A),
+                        disabledContentColor = Color(0xFF555555)
                     )
                 ) {
                     Text(stringResource(R.string.btn_reset), textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
