@@ -119,6 +119,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        window.attributes = window.attributes.also { it.preferredRefreshRate = 60f }
 
         val sensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
         sessionStorage = SessionStorage(this)
