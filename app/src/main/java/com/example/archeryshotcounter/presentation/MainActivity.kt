@@ -214,6 +214,12 @@ class MainActivity : ComponentActivity() {
             val idx = sessions.indexOfFirst { it.id == updated.id }
             if (idx >= 0) sessions[idx] = updated else sessions.add(0, updated)
             sessionStorage.save(sessions.toList())
+        } else {
+            val idx = sessions.indexOfFirst { it.id == session.id }
+            if (idx >= 0) {
+                sessions.removeAt(idx)
+                sessionStorage.save(sessions.toList())
+            }
         }
         currentSession = null
         shotCount = 0

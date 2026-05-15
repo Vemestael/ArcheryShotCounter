@@ -1,15 +1,15 @@
 <resources>
     <string name="app_name">Счётчик выстрелов</string>
 
-    <string name="status_ready">ГОТОВО</string>
-    <string name="status_detecting">ОТСЛЕЖИВАНИЕ</string>
-    <string name="status_paused">ПАУЗА</string>
+    <string name="status_ready">Готово</string>
+    <string name="status_detecting">Отслеживание</string>
+    <string name="status_paused">Пауза</string>
     <string name="shots_label">выстрелов</string>
 
-    <string name="btn_start">СТАРТ</string>
-    <string name="btn_stop">ПАУЗА</string>
-    <string name="btn_resume">ПРОДОЛЖИТЬ</string>
-    <string name="btn_reset">КОНЕЦ</string>
+    <string name="btn_start">Старт</string>
+    <string name="btn_stop">Пауза</string>
+    <string name="btn_resume">Продолжить</string>
+    <string name="btn_reset">Конец</string>
 
     <string name="history_empty">Нет тренировок</string>
     <string name="dialog_save">Сохранить</string>

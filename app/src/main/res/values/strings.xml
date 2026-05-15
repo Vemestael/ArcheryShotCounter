@@ -1,15 +1,15 @@
 <resources>
     <string name="app_name">Archery Counter</string>
 
-    <string name="status_ready">READY</string>
-    <string name="status_detecting">DETECTING</string>
-    <string name="status_paused">PAUSED</string>
+    <string name="status_ready">Ready</string>
+    <string name="status_detecting">Detecting</string>
+    <string name="status_paused">Paused</string>
     <string name="shots_label">shots</string>
 
-    <string name="btn_start">START</string>
-    <string name="btn_stop">PAUSE</string>
-    <string name="btn_resume">RESUME</string>
-    <string name="btn_reset">END</string>
+    <string name="btn_start">Start</string>
+    <string name="btn_stop">Pause</string>
+    <string name="btn_resume">Resume</string>
+    <string name="btn_reset">End</string>
 
     <string name="history_empty">No sessions yet</string>
     <string name="dialog_save">Save</string>
