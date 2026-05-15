@@ -117,6 +117,17 @@ fun HistoryScreen(
                             val dateText = dateFormat.format(Date(histItem.session.startTime))
                             val startTimeText = timeFormat.format(Date(histItem.session.startTime))
                             val endTimeText = timeFormat.format(Date(histItem.session.lastShotTime))
+                            val durationMin = (histItem.session.lastShotTime - histItem.session.startTime) / 60000
+                            val durationText = when {
+                                durationMin < 1 -> "<1m"
+                                durationMin < 60 -> "${durationMin}m"
+                                else -> {
+                                    val h = durationMin / 60
+                                    val m = durationMin % 60
+                                    if (m == 0L) "${h}h" else "${h}h ${m}m"
+                                }
+                            }
+                            val shotsLabel = stringResource(R.string.shots_label)
 
                             Button(
                                 onClick = { editingSession.value = histItem.session },
@@ -129,33 +140,32 @@ fun HistoryScreen(
                                     contentColor = Color(0xFFDDDDDD)
                                 )
                             ) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                                ) {
-                                    Box(
-                                        modifier = Modifier
-                                            .size(8.dp)
-                                            .background(color = dotColor, shape = CircleShape)
-                                    )
-                                    Column(modifier = Modifier.weight(1f)) {
+                                Column(modifier = Modifier.fillMaxWidth()) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(8.dp)
+                                                .background(color = dotColor, shape = CircleShape)
+                                        )
                                         Text(
                                             text = dateText,
                                             style = MaterialTheme.typography.labelSmall,
                                             color = Color(0xFF9E9E9E)
                                         )
-                                        Text(
-                                            text = "$startTimeText – $endTimeText",
-                                            fontSize = 10.sp,
-                                            color = Color(0xFFCCCCCC)
-                                        )
                                     }
                                     Text(
-                                        text = "${histItem.displayCount}",
+                                        text = "$startTimeText – $endTimeText",
+                                        fontSize = 12.sp,
+                                        color = Color(0xFFCCCCCC)
+                                    )
+                                    Text(
+                                        text = "${histItem.displayCount} $shotsLabel • $durationText",
+                                        fontSize = 12.sp,
                                         fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.primary,
-                                        fontSize = 16.sp
+                                        color = MaterialTheme.colorScheme.primary
                                     )
                                 }
                             }
