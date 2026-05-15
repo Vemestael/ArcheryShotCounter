@@ -54,6 +54,15 @@ android {
     buildFeatures {
         compose = true
     }
+
+}
+
+androidComponents {
+    onVariants { variant ->
+        variant.outputs.forEach { output ->
+            output.outputFileName.set("ArcheryShotCounter-${output.versionName.get()}.apk")
+        }
+    }
 }
 
 dependencies {
