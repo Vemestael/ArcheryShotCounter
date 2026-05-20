@@ -5,6 +5,7 @@ import android.content.res.Configuration
 import android.hardware.SensorManager
 import android.os.Build
 import android.os.Bundle
+import android.os.CountDownTimer
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
@@ -66,6 +67,9 @@ private const val KEY_PENDING_ID = "pending_id"
 private const val KEY_PENDING_START = "pending_start"
 private const val KEY_PENDING_LAST = "pending_last"
 private const val KEY_PENDING_COUNT = "pending_count"
+private const val KEY_SHOTS_PER_END = "shots_per_end"
+private const val KEY_AUTO_PAUSE_ENABLED = "auto_pause_enabled"
+private const val KEY_AUTO_PAUSE_DURATION = "auto_pause_duration"
 
 enum class AppLanguage(val code: String, val nativeName: String, val englishName: String) {
     SYSTEM("system", "", "System"),
@@ -97,6 +101,12 @@ class MainActivity : ComponentActivity() {
     private var sensitivity by mutableStateOf(Sensitivity.MEDIUM)
     private var customThreshold by mutableIntStateOf(15)
     private var currentLanguage by mutableStateOf(AppLanguage.SYSTEM)
+
+    private var shotsPerEnd by mutableIntStateOf(0)
+    private var autoPauseEnabled by mutableStateOf(false)
+    private var autoPauseDuration by mutableIntStateOf(60)
+    private var autoPauseSecondsLeft by mutableIntStateOf(-1)
+    private var autoPauseTimer: CountDownTimer? = null
 
     override fun attachBaseContext(newBase: Context) {
         val code = newBase.getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
@@ -145,6 +155,9 @@ class MainActivity : ComponentActivity() {
         customThreshold = prefs.getInt(KEY_CUSTOM_THRESHOLD, 15)
         shotDetector.sensitivity = sensitivity
         shotDetector.customThreshold = customThreshold.toFloat()
+        shotsPerEnd = prefs.getInt(KEY_SHOTS_PER_END, 0)
+        autoPauseEnabled = prefs.getBoolean(KEY_AUTO_PAUSE_ENABLED, false)
+        autoPauseDuration = prefs.getInt(KEY_AUTO_PAUSE_DURATION, 60)
 
         sessions.addAll(sessionStorage.load())
 
@@ -170,6 +183,10 @@ class MainActivity : ComponentActivity() {
                     sensitivity = sensitivity,
                     customThreshold = customThreshold,
                     currentLanguage = currentLanguage,
+                    shotsPerEnd = shotsPerEnd,
+                    autoPauseEnabled = autoPauseEnabled,
+                    autoPauseDuration = autoPauseDuration,
+                    autoPauseSecondsLeft = autoPauseSecondsLeft,
                     onStartOrToggle = ::startOrToggleSession,
                     onEnd = ::endSession,
                     onManualAdjust = ::manualAdjust,
@@ -187,10 +204,51 @@ class MainActivity : ComponentActivity() {
                     },
                     onLanguageChange = ::changeLanguage,
                     onEditSession = ::editSession,
-                    onDeleteSession = ::deleteSession
+                    onDeleteSession = ::deleteSession,
+                    onShotsPerEndChange = { value ->
+                        shotsPerEnd = value
+                        getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+                            .edit { putInt(KEY_SHOTS_PER_END, value) }
+                    },
+                    onAutoPauseEnabledChange = { enabled ->
+                        autoPauseEnabled = enabled
+                        if (!enabled) cancelAutoPause()
+                        getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+                            .edit { putBoolean(KEY_AUTO_PAUSE_ENABLED, enabled) }
+                    },
+                    onAutoPauseDurationChange = { value ->
+                        autoPauseDuration = value
+                        getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+                            .edit { putInt(KEY_AUTO_PAUSE_DURATION, value) }
+                    }
                 )
             }
         }
+    }
+
+    private fun startAutoPause() {
+        stopDetection()
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        vibrator.vibrate(VibrationEffect.createWaveform(longArrayOf(0, 100, 100, 100), -1))
+        autoPauseSecondsLeft = autoPauseDuration
+        autoPauseTimer = object : CountDownTimer(autoPauseDuration * 1000L, 1000L) {
+            override fun onTick(millisUntilFinished: Long) {
+                autoPauseSecondsLeft = ((millisUntilFinished + 999) / 1000).toInt()
+            }
+            override fun onFinish() {
+                autoPauseSecondsLeft = -1
+                autoPauseTimer = null
+                startDetection()
+                shotDetector.resetCooldown()
+                vibrator.vibrate(VibrationEffect.createOneShot(300, VibrationEffect.DEFAULT_AMPLITUDE))
+            }
+        }.start()
+    }
+
+    private fun cancelAutoPause() {
+        autoPauseTimer?.cancel()
+        autoPauseTimer = null
+        autoPauseSecondsLeft = -1
     }
 
     private fun startOrToggleSession() {
@@ -200,6 +258,7 @@ class MainActivity : ComponentActivity() {
                 currentSession = Session(id = now, startTime = now, lastShotTime = now, shotCount = shotCount)
                 startDetection()
             }
+            autoPauseSecondsLeft >= 0 -> { cancelAutoPause(); startDetection(); shotDetector.resetCooldown() }
             isDetecting -> stopDetection()
             else -> startDetection()
         }
@@ -220,6 +279,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun endSession() {
+        cancelAutoPause()
         if (isDetecting) stopDetection()
         val session = currentSession ?: return
         if (shotCount > 0) {
@@ -246,6 +306,9 @@ class MainActivity : ComponentActivity() {
         val idx = sessions.indexOfFirst { it.id == updated.id }
         if (idx >= 0) sessions[idx] = updated else sessions.add(0, updated)
         sessionStorage.save(sessions.toList())
+        if (shotsPerEnd > 0 && autoPauseEnabled && shotCount % shotsPerEnd == 0) {
+            startAutoPause()
+        }
     }
 
     private fun manualAdjust(delta: Int) {
@@ -309,6 +372,7 @@ class MainActivity : ComponentActivity() {
     override fun onPause() {
         super.onPause()
         if (isDetecting) shotDetector.stop()
+        cancelAutoPause()
     }
 
     override fun onResume() {
@@ -333,6 +397,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+        cancelAutoPause()
         shotDetector.stop()
     }
 }
@@ -346,6 +411,10 @@ fun ArcheryApp(
     sensitivity: Sensitivity,
     customThreshold: Int,
     currentLanguage: AppLanguage,
+    shotsPerEnd: Int,
+    autoPauseEnabled: Boolean,
+    autoPauseDuration: Int,
+    autoPauseSecondsLeft: Int,
     onStartOrToggle: () -> Unit,
     onEnd: () -> Unit,
     onManualAdjust: (Int) -> Unit,
@@ -353,7 +422,10 @@ fun ArcheryApp(
     onCustomThresholdChange: (Int) -> Unit,
     onLanguageChange: (AppLanguage) -> Unit,
     onEditSession: (Session) -> Unit,
-    onDeleteSession: (Session) -> Unit
+    onDeleteSession: (Session) -> Unit,
+    onShotsPerEndChange: (Int) -> Unit,
+    onAutoPauseEnabledChange: (Boolean) -> Unit,
+    onAutoPauseDurationChange: (Int) -> Unit
 ) {
     val pagerState = rememberPagerState(initialPage = 1, pageCount = { 3 })
     var showLanguagePicker by remember { mutableStateOf(false) }
@@ -372,6 +444,8 @@ fun ArcheryApp(
                         shotCount = shotCount,
                         isDetecting = isDetecting,
                         currentSession = currentSession,
+                        shotsPerEnd = shotsPerEnd,
+                        autoPauseSecondsLeft = autoPauseSecondsLeft,
                         onStartOrToggle = onStartOrToggle,
                         onEnd = onEnd,
                         onManualAdjust = onManualAdjust
@@ -380,9 +454,15 @@ fun ArcheryApp(
                         sensitivity = sensitivity,
                         customThreshold = customThreshold,
                         currentLanguage = currentLanguage,
+                        shotsPerEnd = shotsPerEnd,
+                        autoPauseEnabled = autoPauseEnabled,
+                        autoPauseDuration = autoPauseDuration,
                         onSensitivityChange = onSensitivityChange,
                         onCustomThresholdChange = onCustomThresholdChange,
-                        onShowLanguagePicker = { showLanguagePicker = true }
+                        onShowLanguagePicker = { showLanguagePicker = true },
+                        onShotsPerEndChange = onShotsPerEndChange,
+                        onAutoPauseEnabledChange = onAutoPauseEnabledChange,
+                        onAutoPauseDurationChange = onAutoPauseDurationChange
                     )
                 }
             }
@@ -409,6 +489,8 @@ fun MainScreen(
     shotCount: Int,
     isDetecting: Boolean,
     currentSession: Session?,
+    shotsPerEnd: Int,
+    autoPauseSecondsLeft: Int,
     onStartOrToggle: () -> Unit,
     onEnd: () -> Unit,
     onManualAdjust: (Int) -> Unit
@@ -417,10 +499,17 @@ fun MainScreen(
     val transformationSpec = rememberTransformationSpec()
 
     val sessionExists = currentSession != null
+    val pausedLabel = stringResource(R.string.status_paused)
     val statusText = when {
         !sessionExists -> stringResource(R.string.status_ready)
+        autoPauseSecondsLeft >= 0 -> {
+            val m = autoPauseSecondsLeft / 60
+            val s = autoPauseSecondsLeft % 60
+            val timeStr = if (m > 0) "${m}m ${s.toString().padStart(2, '0')}s" else "${s}s"
+            "$pausedLabel · $timeStr"
+        }
         isDetecting -> stringResource(R.string.status_detecting)
-        else -> stringResource(R.string.status_paused)
+        else -> pausedLabel
     }
     val statusColor = when {
         !sessionExists -> Color(0xFF9E9E9E)
@@ -475,13 +564,49 @@ fun MainScreen(
                         .padding(vertical = 4.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text(
-                        text = "$shotCount",
-                        fontSize = 72.sp,
-                        fontWeight = FontWeight.Bold,
-                        textAlign = TextAlign.Center,
-                        color = MaterialTheme.colorScheme.primary
-                    )
+                    if (shotsPerEnd > 0 && currentSession != null) {
+                        val seriesIndex = shotCount / shotsPerEnd
+                        val prevBoundary = seriesIndex * shotsPerEnd
+                        val nextBoundary = prevBoundary + shotsPerEnd
+                        val effectivePrev = if (shotCount == prevBoundary && prevBoundary > 0) prevBoundary - shotsPerEnd else prevBoundary
+                        val leftDelta = shotCount - effectivePrev
+                        val rightDelta = nextBoundary - shotCount
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = if (leftDelta > 0) "−$leftDelta" else "",
+                                fontSize = 13.sp,
+                                color = Color(0xFF666666),
+                                modifier = Modifier.weight(1f),
+                                textAlign = TextAlign.Start
+                            )
+                            Text(
+                                text = "$shotCount",
+                                fontSize = 72.sp,
+                                fontWeight = FontWeight.Bold,
+                                textAlign = TextAlign.Center,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            Text(
+                                text = "+$rightDelta",
+                                fontSize = 13.sp,
+                                color = Color(0xFF666666),
+                                modifier = Modifier.weight(1f),
+                                textAlign = TextAlign.End
+                            )
+                        }
+                    } else {
+                        Text(
+                            text = "$shotCount",
+                            fontSize = 72.sp,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
                     Text(
                         text = stringResource(R.string.shots_label),
                         style = MaterialTheme.typography.bodySmall,
@@ -567,14 +692,30 @@ fun MainScreen(
     }
 }
 
+fun formatAutoPauseDuration(seconds: Int): String {
+    val m = seconds / 60
+    val s = seconds % 60
+    return when {
+        m == 0 -> "${s}s"
+        s == 0 -> "${m}m"
+        else -> "${m}m ${s}s"
+    }
+}
+
 @Composable
 fun SettingsScreen(
     sensitivity: Sensitivity,
     customThreshold: Int,
     currentLanguage: AppLanguage,
+    shotsPerEnd: Int,
+    autoPauseEnabled: Boolean,
+    autoPauseDuration: Int,
     onSensitivityChange: (Sensitivity) -> Unit,
     onCustomThresholdChange: (Int) -> Unit,
-    onShowLanguagePicker: () -> Unit
+    onShowLanguagePicker: () -> Unit,
+    onShotsPerEndChange: (Int) -> Unit,
+    onAutoPauseEnabledChange: (Boolean) -> Unit,
+    onAutoPauseDurationChange: (Int) -> Unit
 ) {
     val listState = rememberTransformingLazyColumnState()
     val transformationSpec = rememberTransformationSpec()
@@ -662,6 +803,115 @@ fun SettingsScreen(
                             style = MaterialTheme.typography.labelSmall,
                             color = Color(0xFF666666)
                         )
+                    }
+                }
+            }
+
+            item {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 12.dp, bottom = 4.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = stringResource(R.string.series_title),
+                        style = MaterialTheme.typography.titleSmall,
+                        color = Color(0xFFCCCCCC)
+                    )
+                }
+            }
+
+            item {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp, vertical = 4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Button(
+                        onClick = { if (shotsPerEnd > 0) onShotsPerEndChange(shotsPerEnd - 1) },
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF3A3A3A), contentColor = Color(0xFFCCCCCC))
+                    ) { Text("−", fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()) }
+                    Text(
+                        text = if (shotsPerEnd == 0) stringResource(R.string.series_off) else "$shotsPerEnd",
+                        modifier = Modifier.weight(1f),
+                        textAlign = TextAlign.Center,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Button(
+                        onClick = { if (shotsPerEnd < 99) onShotsPerEndChange(shotsPerEnd + 1) },
+                        modifier = Modifier.weight(1f)
+                    ) { Text("+", fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()) }
+                }
+            }
+
+            if (shotsPerEnd > 0) {
+                item {
+                    Button(
+                        onClick = { onAutoPauseEnabledChange(!autoPauseEnabled) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .transformedHeight(this, transformationSpec),
+                        transformation = SurfaceTransformation(transformationSpec),
+                        colors = if (autoPauseEnabled)
+                            ButtonDefaults.buttonColors()
+                        else
+                            ButtonDefaults.buttonColors(containerColor = Color(0xFF3A3A3A), contentColor = Color(0xFFAAAAAA))
+                    ) {
+                        Text(
+                            text = stringResource(if (autoPauseEnabled) R.string.auto_pause_on else R.string.auto_pause_off),
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                }
+
+                if (autoPauseEnabled) {
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 8.dp, bottom = 4.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = stringResource(R.string.pause_duration_title),
+                                style = MaterialTheme.typography.titleSmall,
+                                color = Color(0xFFCCCCCC)
+                            )
+                        }
+                    }
+                    item {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 8.dp, vertical = 4.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Button(
+                                onClick = { if (autoPauseDuration > 5) onAutoPauseDurationChange(autoPauseDuration - 5) },
+                                modifier = Modifier.weight(1f),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF3A3A3A), contentColor = Color(0xFFCCCCCC))
+                            ) { Text("−", fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()) }
+                            Text(
+                                text = formatAutoPauseDuration(autoPauseDuration),
+                                modifier = Modifier.weight(1f),
+                                textAlign = TextAlign.Center,
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            Button(
+                                onClick = { onAutoPauseDurationChange(autoPauseDuration + 5) },
+                                modifier = Modifier.weight(1f)
+                            ) { Text("+", fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()) }
+                        }
                     }
                 }
             }

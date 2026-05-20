@@ -24,4 +24,11 @@
 
     <string name="lang_section_title">اللغة</string>
     <string name="lang_system">النظام</string>
+
+    <string name="series_title">سلسلة</string>
+    <string name="series_off">إيقاف</string>
+    <string name="auto_pause_title">إيقاف مؤقت تلقائي</string>
+    <string name="auto_pause_on">إيقاف تلقائي: تشغيل</string>
+    <string name="auto_pause_off">إيقاف تلقائي: إيقاف</string>
+    <string name="pause_duration_title">مدة الإيقاف المؤقت</string>
 </resources>

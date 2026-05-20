@@ -59,6 +59,10 @@ class ShotDetector(
         isRunning = false
     }
 
+    fun resetCooldown() {
+        lastShotTime = System.currentTimeMillis()
+    }
+
     override fun onSensorChanged(event: SensorEvent) {
         val x = event.values[0]
         val y = event.values[1]

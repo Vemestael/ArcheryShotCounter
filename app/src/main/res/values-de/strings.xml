@@ -24,4 +24,11 @@
 
     <string name="lang_section_title">Sprache</string>
     <string name="lang_system">System</string>
+
+    <string name="series_title">Serie</string>
+    <string name="series_off">Aus</string>
+    <string name="auto_pause_title">Auto-Pause</string>
+    <string name="auto_pause_on">Auto-Pause: Ein</string>
+    <string name="auto_pause_off">Auto-Pause: Aus</string>
+    <string name="pause_duration_title">Pausendauer</string>
 </resources>

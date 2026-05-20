@@ -24,4 +24,11 @@
 
     <string name="lang_section_title">भाषा</string>
     <string name="lang_system">सिस्टम</string>
+
+    <string name="series_title">श्रृंखला</string>
+    <string name="series_off">बंद</string>
+    <string name="auto_pause_title">स्वतः विराम</string>
+    <string name="auto_pause_on">स्वतः विराम: चालू</string>
+    <string name="auto_pause_off">स्वतः विराम: बंद</string>
+    <string name="pause_duration_title">विराम अवधि</string>
 </resources>

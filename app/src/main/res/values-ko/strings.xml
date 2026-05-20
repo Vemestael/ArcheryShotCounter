@@ -24,4 +24,11 @@
 
     <string name="lang_section_title">언어</string>
     <string name="lang_system">시스템</string>
+
+    <string name="series_title">시리즈</string>
+    <string name="series_off">끄기</string>
+    <string name="auto_pause_title">자동 일시정지</string>
+    <string name="auto_pause_on">자동 일시정지: 켜기</string>
+    <string name="auto_pause_off">자동 일시정지: 끄기</string>
+    <string name="pause_duration_title">일시정지 시간</string>
 </resources>

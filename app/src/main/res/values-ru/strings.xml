@@ -24,4 +24,11 @@
 
     <string name="lang_section_title">Язык</string>
     <string name="lang_system">Системный</string>
+
+    <string name="series_title">Серия</string>
+    <string name="series_off">Выкл</string>
+    <string name="auto_pause_title">Авто-пауза</string>
+    <string name="auto_pause_on">Авто-пауза: Вкл</string>
+    <string name="auto_pause_off">Авто-пауза: Выкл</string>
+    <string name="pause_duration_title">Длительность паузы</string>
 </resources>

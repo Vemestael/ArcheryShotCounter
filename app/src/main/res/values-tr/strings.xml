@@ -24,4 +24,11 @@
 
     <string name="lang_section_title">Dil</string>
     <string name="lang_system">Sistem</string>
+
+    <string name="series_title">Seri</string>
+    <string name="series_off">Kapalı</string>
+    <string name="auto_pause_title">Otomatik duraklama</string>
+    <string name="auto_pause_on">Otomatik duraklama: Açık</string>
+    <string name="auto_pause_off">Otomatik duraklama: Kapalı</string>
+    <string name="pause_duration_title">Duraklama süresi</string>
 </resources>
