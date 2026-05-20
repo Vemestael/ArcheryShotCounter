@@ -118,13 +118,15 @@ fun HistoryScreen(
                             val startTimeText = timeFormat.format(Date(histItem.session.startTime))
                             val endTimeText = timeFormat.format(Date(histItem.session.lastShotTime))
                             val durationMin = (histItem.session.lastShotTime - histItem.session.startTime) / 60000
+                            val unitH = stringResource(R.string.time_h)
+                            val unitM = stringResource(R.string.time_m)
                             val durationText = when {
-                                durationMin < 1 -> "<1m"
-                                durationMin < 60 -> "${durationMin}m"
+                                durationMin < 1 -> "<1$unitM"
+                                durationMin < 60 -> "${durationMin}$unitM"
                                 else -> {
                                     val h = durationMin / 60
                                     val m = durationMin % 60
-                                    if (m == 0L) "${h}h" else "${h}h ${m}m"
+                                    if (m == 0L) "${h}$unitH" else "${h}$unitH ${m}$unitM"
                                 }
                             }
                             val shotsLabel = stringResource(R.string.shots_label)

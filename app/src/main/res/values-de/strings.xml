@@ -31,4 +31,7 @@
     <string name="auto_pause_on">Auto-Pause: Ein</string>
     <string name="auto_pause_off">Auto-Pause: Aus</string>
     <string name="pause_duration_title">Pausendauer</string>
+    <string name="time_h">Std</string>
+    <string name="time_m">Min</string>
+    <string name="time_s">Sek</string>
 </resources>

@@ -31,4 +31,7 @@
     <string name="auto_pause_on">自動一時停止：オン</string>
     <string name="auto_pause_off">自動一時停止：オフ</string>
     <string name="pause_duration_title">一時停止時間</string>
+    <string name="time_h">時間</string>
+    <string name="time_m">分</string>
+    <string name="time_s">秒</string>
 </resources>

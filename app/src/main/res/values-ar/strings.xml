@@ -31,4 +31,7 @@
     <string name="auto_pause_on">إيقاف تلقائي: تشغيل</string>
     <string name="auto_pause_off">إيقاف تلقائي: إيقاف</string>
     <string name="pause_duration_title">مدة الإيقاف المؤقت</string>
+    <string name="time_h">س</string>
+    <string name="time_m">د</string>
+    <string name="time_s">ث</string>
 </resources>

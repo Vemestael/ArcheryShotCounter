@@ -31,4 +31,7 @@
     <string name="auto_pause_on">Авто-пауза: Вкл</string>
     <string name="auto_pause_off">Авто-пауза: Выкл</string>
     <string name="pause_duration_title">Длительность паузы</string>
+    <string name="time_h">ч</string>
+    <string name="time_m">м</string>
+    <string name="time_s">с</string>
 </resources>

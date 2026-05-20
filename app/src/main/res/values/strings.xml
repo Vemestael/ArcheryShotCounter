@@ -25,6 +25,10 @@
     <string name="lang_section_title">Language</string>
     <string name="lang_system">System</string>
 
+    <string name="time_h">h</string>
+    <string name="time_m">m</string>
+    <string name="time_s">s</string>
+
     <string name="series_title">Series</string>
     <string name="series_off">Off</string>
     <string name="auto_pause_title">Auto-pause</string>

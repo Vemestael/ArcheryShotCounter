@@ -31,4 +31,7 @@
     <string name="auto_pause_on">자동 일시정지: 켜기</string>
     <string name="auto_pause_off">자동 일시정지: 끄기</string>
     <string name="pause_duration_title">일시정지 시간</string>
+    <string name="time_h">시간</string>
+    <string name="time_m">분</string>
+    <string name="time_s">초</string>
 </resources>

@@ -692,13 +692,13 @@ fun MainScreen(
     }
 }
 
-fun formatAutoPauseDuration(seconds: Int): String {
+fun formatAutoPauseDuration(seconds: Int, unitM: String, unitS: String): String {
     val m = seconds / 60
     val s = seconds % 60
     return when {
-        m == 0 -> "${s}s"
-        s == 0 -> "${m}m"
-        else -> "${m}m ${s}s"
+        m == 0 -> "${s}$unitS"
+        s == 0 -> "${m}$unitM"
+        else -> "${m}$unitM ${s}$unitS"
     }
 }
 
@@ -900,7 +900,7 @@ fun SettingsScreen(
                                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF3A3A3A), contentColor = Color(0xFFCCCCCC))
                             ) { Text("−", fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()) }
                             Text(
-                                text = formatAutoPauseDuration(autoPauseDuration),
+                                text = formatAutoPauseDuration(autoPauseDuration, stringResource(R.string.time_m), stringResource(R.string.time_s)),
                                 modifier = Modifier.weight(1f),
                                 textAlign = TextAlign.Center,
                                 fontSize = 18.sp,
