@@ -6,6 +6,8 @@ import android.hardware.SensorManager
 import android.os.Build
 import android.os.Bundle
 import android.os.CountDownTimer
+import android.os.Handler
+import android.os.Looper
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
@@ -108,6 +110,10 @@ class MainActivity : ComponentActivity() {
     private var autoPauseSecondsLeft by mutableIntStateOf(-1)
     private var autoPauseTimer: CountDownTimer? = null
 
+    private var lastShotMagnitude by mutableStateOf<Float?>(null)
+    private val magnitudeHandler = Handler(Looper.getMainLooper())
+    private val magnitudeHideRunnable = Runnable { lastShotMagnitude = null }
+
     override fun attachBaseContext(newBase: Context) {
         val code = newBase.getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
             .getString(KEY_LANGUAGE, AppLanguage.SYSTEM.code) ?: AppLanguage.SYSTEM.code
@@ -141,9 +147,12 @@ class MainActivity : ComponentActivity() {
             getSystemService(VIBRATOR_SERVICE) as Vibrator
         }
 
-        shotDetector = ShotDetector(sensorManager) {
+        shotDetector = ShotDetector(sensorManager) { magnitude ->
             runOnUiThread {
                 shotCount++
+                lastShotMagnitude = magnitude
+                magnitudeHandler.removeCallbacks(magnitudeHideRunnable)
+                magnitudeHandler.postDelayed(magnitudeHideRunnable, 3000)
                 vibrator.vibrate(VibrationEffect.createOneShot(150, VibrationEffect.DEFAULT_AMPLITUDE))
                 recordShot()
             }
@@ -187,6 +196,7 @@ class MainActivity : ComponentActivity() {
                     autoPauseEnabled = autoPauseEnabled,
                     autoPauseDuration = autoPauseDuration,
                     autoPauseSecondsLeft = autoPauseSecondsLeft,
+                    lastShotMagnitude = lastShotMagnitude,
                     onStartOrToggle = ::startOrToggleSession,
                     onEnd = ::endSession,
                     onManualAdjust = ::manualAdjust,
@@ -398,6 +408,7 @@ class MainActivity : ComponentActivity() {
     override fun onDestroy() {
         super.onDestroy()
         cancelAutoPause()
+        magnitudeHandler.removeCallbacks(magnitudeHideRunnable)
         shotDetector.stop()
     }
 }
@@ -415,6 +426,7 @@ fun ArcheryApp(
     autoPauseEnabled: Boolean,
     autoPauseDuration: Int,
     autoPauseSecondsLeft: Int,
+    lastShotMagnitude: Float?,
     onStartOrToggle: () -> Unit,
     onEnd: () -> Unit,
     onManualAdjust: (Int) -> Unit,
@@ -446,6 +458,7 @@ fun ArcheryApp(
                         currentSession = currentSession,
                         shotsPerEnd = shotsPerEnd,
                         autoPauseSecondsLeft = autoPauseSecondsLeft,
+                        lastShotMagnitude = lastShotMagnitude,
                         onStartOrToggle = onStartOrToggle,
                         onEnd = onEnd,
                         onManualAdjust = onManualAdjust
@@ -491,6 +504,7 @@ fun MainScreen(
     currentSession: Session?,
     shotsPerEnd: Int,
     autoPauseSecondsLeft: Int,
+    lastShotMagnitude: Float?,
     onStartOrToggle: () -> Unit,
     onEnd: () -> Unit,
     onManualAdjust: (Int) -> Unit
@@ -612,6 +626,13 @@ fun MainScreen(
                         style = MaterialTheme.typography.bodySmall,
                         color = Color(0xFF9E9E9E)
                     )
+                    if (lastShotMagnitude != null) {
+                        Text(
+                            text = "↑ ${"%.1f".format(lastShotMagnitude)} m/s²",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Color(0xFF666666)
+                        )
+                    }
                 }
             }
 

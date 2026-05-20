@@ -24,7 +24,7 @@ enum class Sensitivity(@param:StringRes val labelRes: Int, val threshold: Float)
  */
 class ShotDetector(
     private val sensorManager: SensorManager,
-    private val onShotDetected: () -> Unit
+    private val onShotDetected: (magnitude: Float) -> Unit
 ) : SensorEventListener {
 
     companion object {
@@ -74,7 +74,7 @@ class ShotDetector(
         val now = System.currentTimeMillis()
         if (magnitude > threshold && now - lastShotTime > COOLDOWN_MS) {
             lastShotTime = now
-            onShotDetected()
+            onShotDetected(magnitude)
         }
     }
 
