@@ -1,4 +1,4 @@
-package com.example.archeryshotcounter.presentation
+package com.vemestael.archeryshotcounter.presentation
 
 import androidx.room.Entity
 import androidx.room.ForeignKey

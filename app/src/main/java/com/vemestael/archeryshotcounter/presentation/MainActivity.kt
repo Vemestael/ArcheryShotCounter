@@ -1,4 +1,4 @@
-package com.example.archeryshotcounter.presentation
+package com.vemestael.archeryshotcounter.presentation
 
 import android.content.Context
 import android.content.res.Configuration
@@ -30,7 +30,7 @@ import androidx.wear.compose.foundation.pager.HorizontalPager
 import androidx.wear.compose.foundation.pager.rememberPagerState
 import androidx.wear.compose.material3.AppScaffold
 import androidx.wear.compose.material3.HorizontalPageIndicator
-import com.example.archeryshotcounter.presentation.theme.ArcheryShotCounterTheme
+import com.vemestael.archeryshotcounter.presentation.theme.ArcheryShotCounterTheme
 import java.util.Locale
 import java.util.concurrent.Executors
 

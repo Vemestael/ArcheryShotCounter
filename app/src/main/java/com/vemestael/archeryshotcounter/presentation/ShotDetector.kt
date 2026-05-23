@@ -1,11 +1,11 @@
-package com.example.archeryshotcounter.presentation
+package com.vemestael.archeryshotcounter.presentation
 
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import androidx.annotation.StringRes
-import com.example.archeryshotcounter.R
+import com.vemestael.archeryshotcounter.R
 import kotlin.math.sqrt
 
 enum class Sensitivity(@param:StringRes val labelRes: Int, val threshold: Float) {

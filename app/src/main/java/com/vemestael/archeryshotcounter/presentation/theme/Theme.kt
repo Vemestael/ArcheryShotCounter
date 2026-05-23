@@ -1,4 +1,4 @@
-package com.example.archeryshotcounter.presentation.theme
+package com.vemestael.archeryshotcounter.presentation.theme
 
 import androidx.compose.runtime.Composable
 import androidx.wear.compose.material3.MaterialTheme

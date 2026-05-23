@@ -12,7 +12,7 @@ val keystoreProps = Properties().also { props ->
 }
 
 android {
-    namespace = "com.example.archeryshotcounter"
+    namespace = "com.vemestael.archeryshotcounter"
     compileSdk {
         version = release(36) {
             minorApiLevel = 1
@@ -20,11 +20,11 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.archeryshotcounter"
+        applicationId = "com.vemestael.archeryshotcounter"
         minSdk = 30
         targetSdk = 36
-        versionCode = 2
-        versionName = "1.1"
+        versionCode = 3
+        versionName = "1.2"
 
     }
 

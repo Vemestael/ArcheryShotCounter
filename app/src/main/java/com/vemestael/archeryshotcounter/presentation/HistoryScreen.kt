@@ -1,4 +1,4 @@
-package com.example.archeryshotcounter.presentation
+package com.vemestael.archeryshotcounter.presentation
 
 import android.text.format.DateFormat as AndroidDateFormat
 import androidx.compose.foundation.background
@@ -41,7 +41,7 @@ import androidx.wear.compose.material3.SurfaceTransformation
 import androidx.wear.compose.material3.Text
 import androidx.wear.compose.material3.lazy.rememberTransformationSpec
 import androidx.wear.compose.material3.lazy.transformedHeight
-import com.example.archeryshotcounter.R
+import com.vemestael.archeryshotcounter.R
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date

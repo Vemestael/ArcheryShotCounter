@@ -1,4 +1,4 @@
-package com.example.archeryshotcounter.presentation
+package com.vemestael.archeryshotcounter.presentation
 
 import android.content.Context
 import androidx.room.Dao

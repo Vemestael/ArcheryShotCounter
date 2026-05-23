@@ -1,4 +1,4 @@
-package com.example.archeryshotcounter.presentation
+package com.vemestael.archeryshotcounter.presentation
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
@@ -30,7 +30,7 @@ import androidx.wear.compose.material3.SurfaceTransformation
 import androidx.wear.compose.material3.Text
 import androidx.wear.compose.material3.lazy.rememberTransformationSpec
 import androidx.wear.compose.material3.lazy.transformedHeight
-import com.example.archeryshotcounter.R
+import com.vemestael.archeryshotcounter.R
 
 enum class AppLanguage(val code: String, val nativeName: String, val englishName: String) {
     SYSTEM("system", "", "System"),
