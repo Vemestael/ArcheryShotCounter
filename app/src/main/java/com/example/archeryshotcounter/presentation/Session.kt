@@ -1,12 +1,14 @@
 package com.example.archeryshotcounter.presentation
 
 import android.content.Context
+import androidx.room.Entity
+import androidx.room.PrimaryKey
 import org.json.JSONArray
-import org.json.JSONObject
 import java.io.File
 
+@Entity(tableName = "sessions")
 data class Session(
-    val id: Long,
+    @PrimaryKey val id: Long,
     val startTime: Long,
     val lastShotTime: Long,
     val shotCount: Int
@@ -27,18 +29,5 @@ class SessionStorage(context: Context) {
         } catch (_: Exception) {
             emptyList()
         }
-    }
-
-    fun save(sessions: List<Session>) {
-        val arr = JSONArray()
-        sessions.forEach { s ->
-            arr.put(JSONObject().apply {
-                put("id", s.id)
-                put("startTime", s.startTime)
-                put("lastShotTime", s.lastShotTime)
-                put("shotCount", s.shotCount)
-            })
-        }
-        file.writeText(arr.toString())
     }
 }

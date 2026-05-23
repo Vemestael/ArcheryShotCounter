@@ -17,6 +17,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.mutableStateListOf
 import androidx.core.content.edit
 import java.util.Locale
+import java.util.concurrent.Executors
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -94,7 +95,8 @@ class MainActivity : ComponentActivity() {
 
     private lateinit var shotDetector: ShotDetector
     private lateinit var vibrator: Vibrator
-    private lateinit var sessionStorage: SessionStorage
+    private lateinit var database: AppDatabase
+    private val dbExecutor = Executors.newSingleThreadExecutor()
 
     private var shotCount by mutableIntStateOf(0)
     private var isDetecting by mutableStateOf(false)
@@ -139,7 +141,7 @@ class MainActivity : ComponentActivity() {
         window.attributes = window.attributes.also { it.preferredRefreshRate = 60f }
 
         val sensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
-        sessionStorage = SessionStorage(this)
+        database = AppDatabase.getInstance(this)
 
         vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             (getSystemService(VIBRATOR_MANAGER_SERVICE) as VibratorManager).defaultVibrator
@@ -155,7 +157,7 @@ class MainActivity : ComponentActivity() {
                 magnitudeHandler.removeCallbacks(magnitudeHideRunnable)
                 magnitudeHandler.postDelayed(magnitudeHideRunnable, 5000)
                 vibrator.vibrate(VibrationEffect.createOneShot(150, VibrationEffect.DEFAULT_AMPLITUDE))
-                recordShot()
+                recordShot(magnitude)
             }
         }
 
@@ -169,18 +171,26 @@ class MainActivity : ComponentActivity() {
         autoPauseEnabled = prefs.getBoolean(KEY_AUTO_PAUSE_ENABLED, false)
         autoPauseDuration = prefs.getInt(KEY_AUTO_PAUSE_DURATION, 60)
 
-        sessions.addAll(sessionStorage.load())
-
-        val pendingId = prefs.getLong(KEY_PENDING_ID, -1L)
-        if (pendingId != -1L) {
-            val restored = Session(
-                id = pendingId,
-                startTime = prefs.getLong(KEY_PENDING_START, pendingId),
-                lastShotTime = prefs.getLong(KEY_PENDING_LAST, pendingId),
-                shotCount = prefs.getInt(KEY_PENDING_COUNT, 0)
-            )
-            currentSession = restored
-            shotCount = restored.shotCount
+        dbExecutor.execute {
+            if (database.sessionDao().getAll().isEmpty()) {
+                SessionStorage(applicationContext).load()
+                    .forEach { database.sessionDao().insertOrUpdate(it) }
+            }
+            val all = database.sessionDao().getAll()
+            runOnUiThread {
+                sessions.addAll(all)
+                val pendingId = prefs.getLong(KEY_PENDING_ID, -1L)
+                if (pendingId != -1L) {
+                    val restored = Session(
+                        id = pendingId,
+                        startTime = prefs.getLong(KEY_PENDING_START, pendingId),
+                        lastShotTime = prefs.getLong(KEY_PENDING_LAST, pendingId),
+                        shotCount = prefs.getInt(KEY_PENDING_COUNT, 0)
+                    )
+                    currentSession = restored
+                    shotCount = restored.shotCount
+                }
+            }
         }
 
         setContent {
@@ -286,7 +296,10 @@ class MainActivity : ComponentActivity() {
         when {
             currentSession == null -> {
                 val now = System.currentTimeMillis()
-                currentSession = Session(id = now, startTime = now, lastShotTime = now, shotCount = shotCount)
+                val session = Session(id = now, startTime = now, lastShotTime = now, shotCount = shotCount)
+                currentSession = session
+                if (shotCount > 0) sessions.add(0, session)
+                dbExecutor.execute { database.sessionDao().insertOrUpdate(session) }
                 startDetection()
             }
             autoPauseSecondsLeft >= 0 -> { cancelAutoPause(); startDetection(); shotDetector.resetCooldown() }
@@ -321,26 +334,27 @@ class MainActivity : ComponentActivity() {
             val updated = session.copy(lastShotTime = System.currentTimeMillis(), shotCount = shotCount)
             val idx = sessions.indexOfFirst { it.id == updated.id }
             if (idx >= 0) sessions[idx] = updated else sessions.add(0, updated)
-            sessionStorage.save(sessions.toList())
+            dbExecutor.execute { database.sessionDao().insertOrUpdate(updated) }
         } else {
-            val idx = sessions.indexOfFirst { it.id == session.id }
-            if (idx >= 0) {
-                sessions.removeAt(idx)
-                sessionStorage.save(sessions.toList())
-            }
+            sessions.removeIf { it.id == session.id }
+            dbExecutor.execute { database.sessionDao().delete(session) }
         }
         currentSession = null
         shotCount = 0
         clearPendingSession()
     }
 
-    private fun recordShot() {
+    private fun recordShot(magnitude: Float) {
         val session = currentSession ?: return
-        val updated = session.copy(lastShotTime = System.currentTimeMillis(), shotCount = shotCount)
+        val now = System.currentTimeMillis()
+        val updated = session.copy(lastShotTime = now, shotCount = shotCount)
         currentSession = updated
         val idx = sessions.indexOfFirst { it.id == updated.id }
         if (idx >= 0) sessions[idx] = updated else sessions.add(0, updated)
-        sessionStorage.save(sessions.toList())
+        dbExecutor.execute {
+            database.sessionDao().insertOrUpdate(updated)
+            database.shotDao().insert(Shot(sessionId = session.id, timestamp = now, magnitude = magnitude))
+        }
         if (shotsPerEnd > 0 && autoPauseEnabled && shotCount % shotsPerEnd == 0) {
             startAutoPause()
         }
@@ -352,14 +366,18 @@ class MainActivity : ComponentActivity() {
         if (delta > 0) {
             if (currentSession == null) {
                 val now = System.currentTimeMillis()
-                currentSession = Session(id = now, startTime = now, lastShotTime = now, shotCount = newCount)
+                val session = Session(id = now, startTime = now, lastShotTime = now, shotCount = newCount)
+                currentSession = session
+                sessions.add(0, session)
+                dbExecutor.execute { database.sessionDao().insertOrUpdate(session) }
+                return
             }
             val session = currentSession!!
             val updated = session.copy(lastShotTime = System.currentTimeMillis(), shotCount = newCount)
             currentSession = updated
             val idx = sessions.indexOfFirst { it.id == updated.id }
             if (idx >= 0) sessions[idx] = updated else sessions.add(0, updated)
-            sessionStorage.save(sessions.toList())
+            dbExecutor.execute { database.sessionDao().insertOrUpdate(updated) }
         } else if (delta < 0 && currentSession != null) {
             val session = currentSession!!
             val updated = session.copy(shotCount = newCount)
@@ -367,7 +385,7 @@ class MainActivity : ComponentActivity() {
             val idx = sessions.indexOfFirst { it.id == updated.id }
             if (idx >= 0) {
                 sessions[idx] = updated
-                sessionStorage.save(sessions.toList())
+                dbExecutor.execute { database.sessionDao().insertOrUpdate(updated) }
             }
         }
     }
@@ -376,7 +394,7 @@ class MainActivity : ComponentActivity() {
         val idx = sessions.indexOfFirst { it.id == updated.id }
         if (idx >= 0) {
             sessions[idx] = updated
-            sessionStorage.save(sessions.toList())
+            dbExecutor.execute { database.sessionDao().insertOrUpdate(updated) }
         }
         if (currentSession?.id == updated.id) {
             currentSession = updated
@@ -386,7 +404,7 @@ class MainActivity : ComponentActivity() {
 
     private fun deleteSession(session: Session) {
         sessions.removeIf { it.id == session.id }
-        sessionStorage.save(sessions.toList())
+        dbExecutor.execute { database.sessionDao().delete(session) }
         if (currentSession?.id == session.id) {
             if (isDetecting) stopDetection()
             currentSession = null
@@ -435,6 +453,7 @@ class MainActivity : ComponentActivity() {
         cancelAutoPause()
         magnitudeHandler.removeCallbacks(magnitudeHideRunnable)
         shotDetector.stop()
+        dbExecutor.shutdown()
     }
 }
 
