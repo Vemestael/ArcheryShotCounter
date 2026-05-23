@@ -10,6 +10,7 @@
     <string name="btn_stop">Pause</string>
     <string name="btn_resume">Resume</string>
     <string name="btn_reset">End</string>
+    <string name="btn_auto_pause">auto</string>
 
     <string name="history_empty">No sessions yet</string>
     <string name="dialog_save">Save</string>

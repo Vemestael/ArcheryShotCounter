@@ -10,6 +10,7 @@
     <string name="btn_stop">रोकें</string>
     <string name="btn_resume">जारी रखें</string>
     <string name="btn_reset">समाप्त</string>
+    <string name="btn_auto_pause">ऑटो</string>
 
     <string name="history_empty">कोई सत्र नहीं</string>
     <string name="dialog_save">सहेजें</string>

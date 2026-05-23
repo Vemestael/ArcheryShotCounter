@@ -10,6 +10,7 @@
     <string name="btn_stop">일시 정지</string>
     <string name="btn_resume">재개</string>
     <string name="btn_reset">종료</string>
+    <string name="btn_auto_pause">자동</string>
 
     <string name="history_empty">세션 없음</string>
     <string name="dialog_save">저장</string>

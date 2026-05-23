@@ -10,6 +10,7 @@
     <string name="btn_stop">Pause</string>
     <string name="btn_resume">Fortsetzen</string>
     <string name="btn_reset">Ende</string>
+    <string name="btn_auto_pause">auto</string>
 
     <string name="history_empty">Keine Trainings</string>
     <string name="dialog_save">Speichern</string>

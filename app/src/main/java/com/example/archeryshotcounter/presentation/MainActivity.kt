@@ -43,6 +43,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.wear.compose.foundation.lazy.TransformingLazyColumn
@@ -152,7 +153,7 @@ class MainActivity : ComponentActivity() {
                 shotCount++
                 lastShotMagnitude = magnitude
                 magnitudeHandler.removeCallbacks(magnitudeHideRunnable)
-                magnitudeHandler.postDelayed(magnitudeHideRunnable, 3000)
+                magnitudeHandler.postDelayed(magnitudeHideRunnable, 5000)
                 vibrator.vibrate(VibrationEffect.createOneShot(150, VibrationEffect.DEFAULT_AMPLITUDE))
                 recordShot()
             }
@@ -197,7 +198,8 @@ class MainActivity : ComponentActivity() {
                     autoPauseDuration = autoPauseDuration,
                     autoPauseSecondsLeft = autoPauseSecondsLeft,
                     lastShotMagnitude = lastShotMagnitude,
-                    onStartOrToggle = ::startOrToggleSession,
+                    onStartOrToggle = ::onPrimaryButton,
+                    onSecondaryButton = ::onSecondaryButton,
                     onEnd = ::endSession,
                     onManualAdjust = ::manualAdjust,
                     onSensitivityChange = { s ->
@@ -259,9 +261,28 @@ class MainActivity : ComponentActivity() {
         autoPauseTimer?.cancel()
         autoPauseTimer = null
         autoPauseSecondsLeft = -1
+        window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
     }
 
-    private fun startOrToggleSession() {
+    private fun extendAutoPause(seconds: Int) {
+        autoPauseTimer?.cancel()
+        autoPauseSecondsLeft += seconds
+        val remaining = autoPauseSecondsLeft * 1000L
+        autoPauseTimer = object : CountDownTimer(remaining, 1000L) {
+            override fun onTick(millisUntilFinished: Long) {
+                autoPauseSecondsLeft = ((millisUntilFinished + 999) / 1000).toInt()
+            }
+            override fun onFinish() {
+                autoPauseSecondsLeft = -1
+                autoPauseTimer = null
+                startDetection()
+                shotDetector.resetCooldown()
+                vibrator.vibrate(VibrationEffect.createOneShot(300, VibrationEffect.DEFAULT_AMPLITUDE))
+            }
+        }.start()
+    }
+
+    private fun onPrimaryButton() {
         when {
             currentSession == null -> {
                 val now = System.currentTimeMillis()
@@ -272,6 +293,10 @@ class MainActivity : ComponentActivity() {
             isDetecting -> stopDetection()
             else -> startDetection()
         }
+    }
+
+    private fun onSecondaryButton() {
+        if (autoPauseSecondsLeft >= 0) extendAutoPause(5) else startAutoPause()
     }
 
     private fun startDetection() {
@@ -428,6 +453,7 @@ fun ArcheryApp(
     autoPauseSecondsLeft: Int,
     lastShotMagnitude: Float?,
     onStartOrToggle: () -> Unit,
+    onSecondaryButton: () -> Unit,
     onEnd: () -> Unit,
     onManualAdjust: (Int) -> Unit,
     onSensitivityChange: (Sensitivity) -> Unit,
@@ -457,9 +483,11 @@ fun ArcheryApp(
                         isDetecting = isDetecting,
                         currentSession = currentSession,
                         shotsPerEnd = shotsPerEnd,
+                        autoPauseEnabled = autoPauseEnabled,
                         autoPauseSecondsLeft = autoPauseSecondsLeft,
                         lastShotMagnitude = lastShotMagnitude,
-                        onStartOrToggle = onStartOrToggle,
+                        onPrimaryButton = onStartOrToggle,
+                        onSecondaryButton = onSecondaryButton,
                         onEnd = onEnd,
                         onManualAdjust = onManualAdjust
                     )
@@ -503,9 +531,11 @@ fun MainScreen(
     isDetecting: Boolean,
     currentSession: Session?,
     shotsPerEnd: Int,
+    autoPauseEnabled: Boolean,
     autoPauseSecondsLeft: Int,
     lastShotMagnitude: Float?,
-    onStartOrToggle: () -> Unit,
+    onPrimaryButton: () -> Unit,
+    onSecondaryButton: () -> Unit,
     onEnd: () -> Unit,
     onManualAdjust: (Int) -> Unit
 ) {
@@ -514,12 +544,14 @@ fun MainScreen(
 
     val sessionExists = currentSession != null
     val pausedLabel = stringResource(R.string.status_paused)
+    val unitM = stringResource(R.string.time_m)
+    val unitS = stringResource(R.string.time_s)
     val statusText = when {
         !sessionExists -> stringResource(R.string.status_ready)
         autoPauseSecondsLeft >= 0 -> {
             val m = autoPauseSecondsLeft / 60
             val s = autoPauseSecondsLeft % 60
-            val timeStr = if (m > 0) "${m}m ${s.toString().padStart(2, '0')}s" else "${s}s"
+            val timeStr = if (m > 0) "${m}$unitM ${s.toString().padStart(2, '0')}$unitS" else "${s}$unitS"
             "$pausedLabel · $timeStr"
         }
         isDetecting -> stringResource(R.string.status_detecting)
@@ -530,19 +562,6 @@ fun MainScreen(
         isDetecting -> Color(0xFF4CAF50)
         else -> Color(0xFFFFC107)
     }
-    val primaryButtonLabel = when {
-        !sessionExists -> stringResource(R.string.btn_start)
-        isDetecting -> stringResource(R.string.btn_stop)
-        else -> stringResource(R.string.btn_resume)
-    }
-    val primaryButtonContainerColor = if (isDetecting && sessionExists)
-        MaterialTheme.colorScheme.error
-    else
-        MaterialTheme.colorScheme.primary
-    val primaryButtonContentColor = if (isDetecting && sessionExists)
-        MaterialTheme.colorScheme.onError
-    else
-        MaterialTheme.colorScheme.onPrimary
 
     ScreenScaffold(scrollState = listState) { contentPadding ->
         TransformingLazyColumn(
@@ -663,23 +682,90 @@ fun MainScreen(
             }
 
             item {
-                Button(
-                    onClick = onStartOrToggle,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .transformedHeight(this, transformationSpec),
-                    transformation = SurfaceTransformation(transformationSpec),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = primaryButtonContainerColor,
-                        contentColor = primaryButtonContentColor
-                    )
-                ) {
-                    Text(
-                        text = primaryButtonLabel,
-                        fontWeight = FontWeight.Bold,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth()
-                    )
+                if (!sessionExists || !autoPauseEnabled) {
+                    val label = when {
+                        !sessionExists -> stringResource(R.string.btn_start)
+                        isDetecting -> stringResource(R.string.btn_stop)
+                        else -> stringResource(R.string.btn_resume)
+                    }
+                    val colors = if (isDetecting && sessionExists)
+                        ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.error,
+                            contentColor = MaterialTheme.colorScheme.onError
+                        )
+                    else
+                        ButtonDefaults.buttonColors()
+                    Button(
+                        onClick = onPrimaryButton,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .transformedHeight(this, transformationSpec),
+                        transformation = SurfaceTransformation(transformationSpec),
+                        colors = colors
+                    ) {
+                        Text(
+                            text = label,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                } else {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 8.dp, vertical = 4.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        val leftLabel = if (isDetecting)
+                            stringResource(R.string.btn_stop)
+                        else
+                            stringResource(R.string.btn_resume)
+                        val leftColors = if (isDetecting)
+                            ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.error,
+                                contentColor = MaterialTheme.colorScheme.onError
+                            )
+                        else
+                            ButtonDefaults.buttonColors()
+                        Button(
+                            onClick = onPrimaryButton,
+                            modifier = Modifier.weight(2f),
+                            colors = leftColors
+                        ) {
+                            Text(
+                                text = leftLabel,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 12.sp,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+                        val rightLabel = if (autoPauseSecondsLeft >= 0)
+                            "+5$unitS"
+                        else
+                            stringResource(R.string.btn_auto_pause)
+                        Button(
+                            onClick = onSecondaryButton,
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFF3A3A3A),
+                                contentColor = Color(0xFFCCCCCC)
+                            )
+                        ) {
+                            Text(
+                                text = rightLabel,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 12.sp,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+                    }
                 }
             }
 

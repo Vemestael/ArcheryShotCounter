@@ -10,6 +10,7 @@
     <string name="btn_stop">一時停止</string>
     <string name="btn_resume">再開</string>
     <string name="btn_reset">終了</string>
+    <string name="btn_auto_pause">自動</string>
 
     <string name="history_empty">セッションなし</string>
     <string name="dialog_save">保存</string>

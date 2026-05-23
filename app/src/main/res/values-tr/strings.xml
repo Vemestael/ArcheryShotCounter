@@ -10,6 +10,7 @@
     <string name="btn_stop">Duraklat</string>
     <string name="btn_resume">Devam Et</string>
     <string name="btn_reset">Bitir</string>
+    <string name="btn_auto_pause">oto</string>
 
     <string name="history_empty">Henüz oturum yok</string>
     <string name="dialog_save">Kaydet</string>

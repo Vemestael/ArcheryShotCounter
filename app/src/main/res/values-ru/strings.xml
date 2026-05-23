@@ -10,6 +10,7 @@
     <string name="btn_stop">Пауза</string>
     <string name="btn_resume">Продолжить</string>
     <string name="btn_reset">Конец</string>
+    <string name="btn_auto_pause">авто</string>
 
     <string name="history_empty">Нет тренировок</string>
     <string name="dialog_save">Сохранить</string>

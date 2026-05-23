@@ -10,6 +10,7 @@
     <string name="btn_stop">إيقاف</string>
     <string name="btn_resume">استئناف</string>
     <string name="btn_reset">إنهاء</string>
+    <string name="btn_auto_pause">تلقائي</string>
 
     <string name="history_empty">لا توجد جلسات</string>
     <string name="dialog_save">حفظ</string>

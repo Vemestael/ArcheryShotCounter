@@ -10,6 +10,7 @@
     <string name="btn_stop">暂停</string>
     <string name="btn_resume">继续</string>
     <string name="btn_reset">结束</string>
+    <string name="btn_auto_pause">自动</string>
 
     <string name="history_empty">暂无训练记录</string>
     <string name="dialog_save">保存</string>
