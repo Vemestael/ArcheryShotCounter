@@ -26,6 +26,7 @@
     <string name="lang_section_title">Language</string>
     <string name="lang_system">System</string>
 
+    <string name="unit_accel">m/s²</string>
     <string name="time_h">h</string>
     <string name="time_m">m</string>
     <string name="time_s">s</string>

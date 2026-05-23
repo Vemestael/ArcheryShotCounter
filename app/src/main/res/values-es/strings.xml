@@ -32,6 +32,7 @@
     <string name="auto_pause_on">Pausa automática: Activado</string>
     <string name="auto_pause_off">Pausa automática: Desactivado</string>
     <string name="pause_duration_title">Duración de pausa</string>
+    <string name="unit_accel">m/s²</string>
     <string name="time_h">h</string>
     <string name="time_m">min</string>
     <string name="time_s">s</string>

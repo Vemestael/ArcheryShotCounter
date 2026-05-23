@@ -32,6 +32,7 @@
     <string name="auto_pause_on">स्वतः विराम: चालू</string>
     <string name="auto_pause_off">स्वतः विराम: बंद</string>
     <string name="pause_duration_title">विराम अवधि</string>
+    <string name="unit_accel">m/s²</string>
     <string name="time_h">घं</string>
     <string name="time_m">मि</string>
     <string name="time_s">से</string>

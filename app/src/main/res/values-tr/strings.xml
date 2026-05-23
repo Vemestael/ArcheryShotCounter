@@ -32,6 +32,7 @@
     <string name="auto_pause_on">Otomatik duraklama: Açık</string>
     <string name="auto_pause_off">Otomatik duraklama: Kapalı</string>
     <string name="pause_duration_title">Duraklama süresi</string>
+    <string name="unit_accel">m/s²</string>
     <string name="time_h">s</string>
     <string name="time_m">dk</string>
     <string name="time_s">sn</string>

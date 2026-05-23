@@ -32,6 +32,7 @@
     <string name="auto_pause_on">自动暂停：开</string>
     <string name="auto_pause_off">自动暂停：关</string>
     <string name="pause_duration_title">暂停时长</string>
+    <string name="unit_accel">m/s²</string>
     <string name="time_h">小时</string>
     <string name="time_m">分</string>
     <string name="time_s">秒</string>

@@ -666,7 +666,7 @@ fun MainScreen(
                     )
                     if (lastShotMagnitude != null) {
                         Text(
-                            text = "↑ ${"%.1f".format(lastShotMagnitude)} m/s²",
+                            text = "↑ ${"%.1f".format(lastShotMagnitude)} ${stringResource(R.string.unit_accel)}",
                             style = MaterialTheme.typography.labelSmall,
                             color = Color(0xFF666666)
                         )
