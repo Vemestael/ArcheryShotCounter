@@ -2,6 +2,8 @@ package com.vemestael.archeryshotcounter.presentation
 
 import android.text.format.DateFormat as AndroidDateFormat
 import androidx.compose.foundation.background
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -251,6 +253,7 @@ private fun EditSessionDialog(
             modifier = Modifier
                 .clip(RoundedCornerShape(24.dp))
                 .background(Color(0xFF1A1A1A))
+                .verticalScroll(rememberScrollState())
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(8.dp)
