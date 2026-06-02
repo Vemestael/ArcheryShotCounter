@@ -258,6 +258,12 @@ private fun EditSessionDialog(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
+            Text(
+                text = dateText,
+                style = MaterialTheme.typography.titleSmall,
+                color = Color(0xFFCCCCCC),
+                textAlign = TextAlign.Center
+            )
             Button(
                 onClick = onShowDetail,
                 modifier = Modifier.fillMaxWidth(),
@@ -268,12 +274,6 @@ private fun EditSessionDialog(
             ) {
                 Text(stringResource(R.string.btn_detail), textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
             }
-            Text(
-                text = dateText,
-                style = MaterialTheme.typography.titleSmall,
-                color = Color(0xFFCCCCCC),
-                textAlign = TextAlign.Center
-            )
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
