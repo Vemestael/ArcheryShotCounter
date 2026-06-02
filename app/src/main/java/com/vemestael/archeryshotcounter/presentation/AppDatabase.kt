@@ -26,6 +26,9 @@ interface SessionDao {
 interface ShotDao {
     @Insert
     fun insert(shot: Shot)
+
+    @Query("SELECT * FROM shots WHERE sessionId = :sessionId ORDER BY timestamp DESC")
+    fun getBySession(sessionId: Long): List<Shot>
 }
 
 @Database(entities = [Session::class, Shot::class], version = 1, exportSchema = false)

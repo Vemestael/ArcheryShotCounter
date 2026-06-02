@@ -36,4 +36,7 @@
     <string name="time_h">Std</string>
     <string name="time_m">Min</string>
     <string name="time_s">Sek</string>
+
+    <string name="btn_detail">Details</string>
+    <string name="shots_empty">Keine Daten</string>
 </resources>

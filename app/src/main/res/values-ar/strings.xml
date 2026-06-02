@@ -36,4 +36,7 @@
     <string name="time_h">س</string>
     <string name="time_m">د</string>
     <string name="time_s">ث</string>
+
+    <string name="btn_detail">تفاصيل</string>
+    <string name="shots_empty">لا توجد بيانات</string>
 </resources>

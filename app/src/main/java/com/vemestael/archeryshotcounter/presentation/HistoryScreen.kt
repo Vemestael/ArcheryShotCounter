@@ -62,7 +62,8 @@ fun HistoryScreen(
     currentSession: Session?,
     activeShotCount: Int,
     onEdit: (Session) -> Unit,
-    onDelete: (Session) -> Unit
+    onDelete: (Session) -> Unit,
+    onShowDetail: (Session) -> Unit
 ) {
     val context = LocalContext.current
     val listState = rememberTransformingLazyColumnState()
@@ -185,6 +186,10 @@ fun HistoryScreen(
     editingSession.value?.let { session ->
         EditSessionDialog(
             session = session,
+            onShowDetail = {
+                editingSession.value = null
+                onShowDetail(session)
+            },
             onSave = { updated ->
                 onEdit(updated)
                 editingSession.value = null
@@ -231,6 +236,7 @@ private fun buildHistoryItems(
 @Composable
 private fun EditSessionDialog(
     session: Session,
+    onShowDetail: () -> Unit,
     onSave: (Session) -> Unit,
     onDelete: () -> Unit,
     onDismiss: () -> Unit
@@ -249,6 +255,16 @@ private fun EditSessionDialog(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
+            Button(
+                onClick = onShowDetail,
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF3A3A3A),
+                    contentColor = Color(0xFFCCCCCC)
+                )
+            ) {
+                Text(stringResource(R.string.btn_detail), textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+            }
             Text(
                 text = dateText,
                 style = MaterialTheme.typography.titleSmall,

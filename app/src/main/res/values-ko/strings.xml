@@ -36,4 +36,7 @@
     <string name="time_h">시간</string>
     <string name="time_m">분</string>
     <string name="time_s">초</string>
+
+    <string name="btn_detail">상세</string>
+    <string name="shots_empty">데이터 없음</string>
 </resources>

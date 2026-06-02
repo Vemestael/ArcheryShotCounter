@@ -36,4 +36,7 @@
     <string name="time_h">s</string>
     <string name="time_m">dk</string>
     <string name="time_s">sn</string>
+
+    <string name="btn_detail">Detaylar</string>
+    <string name="shots_empty">Veri yok</string>
 </resources>

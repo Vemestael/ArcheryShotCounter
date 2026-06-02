@@ -36,4 +36,7 @@
     <string name="time_h">ч</string>
     <string name="time_m">м</string>
     <string name="time_s">с</string>
+
+    <string name="btn_detail">Детальнее</string>
+    <string name="shots_empty">Нет данных</string>
 </resources>

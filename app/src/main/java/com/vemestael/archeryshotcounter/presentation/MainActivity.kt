@@ -72,6 +72,9 @@ class MainActivity : ComponentActivity() {
     private val magnitudeHandler = Handler(Looper.getMainLooper())
     private val magnitudeHideRunnable = Runnable { lastShotMagnitude = null }
 
+    private var detailSession by mutableStateOf<Session?>(null)
+    private val detailShots = mutableStateListOf<Shot>()
+
     override fun attachBaseContext(newBase: Context) {
         val code = newBase.getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
             .getString(KEY_LANGUAGE, AppLanguage.SYSTEM.code) ?: AppLanguage.SYSTEM.code
@@ -182,6 +185,17 @@ class MainActivity : ComponentActivity() {
                     onLanguageChange = ::changeLanguage,
                     onEditSession = ::editSession,
                     onDeleteSession = ::deleteSession,
+                    detailSession = detailSession,
+                    detailShots = detailShots,
+                    onShowDetail = { session ->
+                        detailSession = session
+                        detailShots.clear()
+                        dbExecutor.execute {
+                            val shots = database.shotDao().getBySession(session.id)
+                            runOnUiThread { detailShots.addAll(shots) }
+                        }
+                    },
+                    onDismissDetail = { detailSession = null; detailShots.clear() },
                     onShotsPerEndChange = { value ->
                         shotsPerEnd = value
                         getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
@@ -437,7 +451,11 @@ fun ArcheryApp(
     onDeleteSession: (Session) -> Unit,
     onShotsPerEndChange: (Int) -> Unit,
     onAutoPauseEnabledChange: (Boolean) -> Unit,
-    onAutoPauseDurationChange: (Int) -> Unit
+    onAutoPauseDurationChange: (Int) -> Unit,
+    detailSession: Session?,
+    detailShots: List<Shot>,
+    onShowDetail: (Session) -> Unit,
+    onDismissDetail: () -> Unit
 ) {
     val pagerState = rememberPagerState(initialPage = 1, pageCount = { 3 })
     var showLanguagePicker by remember { mutableStateOf(false) }
@@ -450,7 +468,8 @@ fun ArcheryApp(
                         currentSession = currentSession,
                         activeShotCount = shotCount,
                         onEdit = onEditSession,
-                        onDelete = onDeleteSession
+                        onDelete = onDeleteSession,
+                        onShowDetail = onShowDetail
                     )
                     1 -> MainScreen(
                         shotCount = shotCount,
@@ -485,6 +504,13 @@ fun ArcheryApp(
                 pagerState = pagerState,
                 modifier = Modifier.align(Alignment.BottomCenter)
             )
+            if (detailSession != null) {
+                ShotDetailScreen(
+                    session = detailSession,
+                    shots = detailShots,
+                    onDismiss = onDismissDetail
+                )
+            }
             if (showLanguagePicker) {
                 LanguagePickerScreen(
                     currentLanguage = currentLanguage,

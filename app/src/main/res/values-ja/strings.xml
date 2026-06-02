@@ -36,4 +36,7 @@
     <string name="time_h">時間</string>
     <string name="time_m">分</string>
     <string name="time_s">秒</string>
+
+    <string name="btn_detail">詳細</string>
+    <string name="shots_empty">データなし</string>
 </resources>

@@ -37,4 +37,7 @@
     <string name="auto_pause_on">Auto-pause: On</string>
     <string name="auto_pause_off">Auto-pause: Off</string>
     <string name="pause_duration_title">Pause duration</string>
+
+    <string name="btn_detail">Details</string>
+    <string name="shots_empty">No data</string>
 </resources>

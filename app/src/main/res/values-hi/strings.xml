@@ -36,4 +36,7 @@
     <string name="time_h">घं</string>
     <string name="time_m">मि</string>
     <string name="time_s">से</string>
+
+    <string name="btn_detail">विवरण</string>
+    <string name="shots_empty">कोई डेटा नहीं</string>
 </resources>
