@@ -10,6 +10,8 @@ import androidx.room.Query
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.Upsert
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Dao
 interface SessionDao {
@@ -30,9 +32,22 @@ interface ShotDao {
 
     @Query("SELECT * FROM shots WHERE sessionId = :sessionId ORDER BY timestamp DESC")
     fun getBySession(sessionId: Long): List<Shot>
+
+    @Query("DELETE FROM shots WHERE id IN (SELECT id FROM shots WHERE sessionId = :sessionId ORDER BY timestamp DESC LIMIT :count)")
+    fun deleteLatest(sessionId: Long, count: Int)
 }
 
-@Database(entities = [Session::class, Shot::class], version = 1, exportSchema = false)
+private val MIGRATION_1_2 = object : Migration(1, 2) {
+    override fun migrate(database: SupportSQLiteDatabase) {
+        database.execSQL("CREATE TABLE IF NOT EXISTS `shots_new` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `sessionId` INTEGER NOT NULL, `timestamp` INTEGER NOT NULL, `magnitude` REAL, FOREIGN KEY(`sessionId`) REFERENCES `sessions`(`id`) ON DELETE CASCADE)")
+        database.execSQL("INSERT INTO `shots_new` SELECT `id`, `sessionId`, `timestamp`, `magnitude` FROM `shots`")
+        database.execSQL("DROP TABLE `shots`")
+        database.execSQL("ALTER TABLE `shots_new` RENAME TO `shots`")
+        database.execSQL("CREATE INDEX IF NOT EXISTS `index_shots_sessionId` ON `shots` (`sessionId`)")
+    }
+}
+
+@Database(entities = [Session::class, Shot::class], version = 2, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun sessionDao(): SessionDao
     abstract fun shotDao(): ShotDao
@@ -46,7 +61,7 @@ abstract class AppDatabase : RoomDatabase() {
                     context.applicationContext,
                     AppDatabase::class.java,
                     "archery.db"
-                ).build().also { instance = it }
+                ).addMigrations(MIGRATION_1_2).build().also { instance = it }
             }
     }
 }

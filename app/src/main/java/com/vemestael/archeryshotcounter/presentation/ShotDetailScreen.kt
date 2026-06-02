@@ -123,10 +123,10 @@ fun ShotDetailScreen(
                                         color = Color(0xFFCCCCCC)
                                     )
                                     Text(
-                                        text = "↑ ${"%.1f".format(shot.magnitude)} $unitAccel",
+                                        text = if (shot.magnitude != null) "↑ ${"%.1f".format(shot.magnitude)} $unitAccel" else "—",
                                         fontSize = 12.sp,
                                         fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.primary
+                                        color = if (shot.magnitude != null) MaterialTheme.colorScheme.primary else Color(0xFF666666)
                                     )
                                 }
                             }

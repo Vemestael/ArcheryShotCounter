@@ -330,31 +330,42 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun manualAdjust(delta: Int) {
-        val newCount = (shotCount + delta).coerceAtLeast(0)
+        val actualDelta = if (delta < 0) -minOf(-delta, shotCount) else delta
+        if (actualDelta == 0) return
+        val newCount = shotCount + actualDelta
         shotCount = newCount
-        if (delta > 0) {
+        val now = System.currentTimeMillis()
+        if (actualDelta > 0) {
             if (currentSession == null) {
-                val now = System.currentTimeMillis()
                 val session = Session(id = now, startTime = now, lastShotTime = now, shotCount = newCount)
                 currentSession = session
                 sessions.add(0, session)
-                dbExecutor.execute { database.sessionDao().insertOrUpdate(session) }
+                dbExecutor.execute {
+                    database.sessionDao().insertOrUpdate(session)
+                    repeat(actualDelta) { database.shotDao().insert(Shot(sessionId = session.id, timestamp = now, magnitude = null)) }
+                }
                 return
             }
             val session = currentSession!!
-            val updated = session.copy(lastShotTime = System.currentTimeMillis(), shotCount = newCount)
+            val updated = session.copy(lastShotTime = now, shotCount = newCount)
             currentSession = updated
             val idx = sessions.indexOfFirst { it.id == updated.id }
             if (idx >= 0) sessions[idx] = updated else sessions.add(0, updated)
-            dbExecutor.execute { database.sessionDao().insertOrUpdate(updated) }
-        } else if (delta < 0 && currentSession != null) {
-            val session = currentSession!!
+            dbExecutor.execute {
+                database.sessionDao().insertOrUpdate(updated)
+                repeat(actualDelta) { database.shotDao().insert(Shot(sessionId = session.id, timestamp = now, magnitude = null)) }
+            }
+        } else {
+            val session = currentSession ?: return
             val updated = session.copy(shotCount = newCount)
             currentSession = updated
             val idx = sessions.indexOfFirst { it.id == updated.id }
             if (idx >= 0) {
                 sessions[idx] = updated
-                dbExecutor.execute { database.sessionDao().insertOrUpdate(updated) }
+                dbExecutor.execute {
+                    database.sessionDao().insertOrUpdate(updated)
+                    database.shotDao().deleteLatest(session.id, -actualDelta)
+                }
             }
         }
     }
