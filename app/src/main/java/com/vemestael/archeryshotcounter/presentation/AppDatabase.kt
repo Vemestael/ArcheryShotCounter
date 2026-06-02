@@ -9,13 +9,14 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.Upsert
 
 @Dao
 interface SessionDao {
     @Query("SELECT * FROM sessions ORDER BY startTime DESC")
     fun getAll(): List<Session>
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     fun insertOrUpdate(session: Session)
 
     @Delete
