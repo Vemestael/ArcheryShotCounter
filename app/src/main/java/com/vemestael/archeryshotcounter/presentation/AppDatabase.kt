@@ -12,6 +12,7 @@ import androidx.room.RoomDatabase
 import androidx.room.Upsert
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
+import androidx.room.RoomDatabase.JournalMode
 
 @Dao
 interface SessionDao {
@@ -61,7 +62,9 @@ abstract class AppDatabase : RoomDatabase() {
                     context.applicationContext,
                     AppDatabase::class.java,
                     "archery.db"
-                ).addMigrations(MIGRATION_1_2).build().also { instance = it }
+                ).addMigrations(MIGRATION_1_2)
+                    .setJournalMode(JournalMode.TRUNCATE)
+                    .build().also { instance = it }
             }
     }
 }
