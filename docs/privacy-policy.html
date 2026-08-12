@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Privacy Policy — Archery Shot Counter</title>
+<style>
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    max-width: 680px;
+    margin: 40px auto;
+    padding: 0 20px;
+    line-height: 1.6;
+    color: #1a1a1a;
+  }
+  h1 { font-size: 1.6em; }
+  h2 { font-size: 1.15em; margin-top: 1.8em; }
+  .updated { color: #666; font-size: 0.9em; }
+  code { background: #f2f2f2; padding: 1px 5px; border-radius: 3px; font-size: 0.92em; }
+  ul { padding-left: 1.3em; }
+</style>
+</head>
+<body>
+
+<h1>Privacy Policy — Archery Shot Counter</h1>
+<p class="updated">Last updated: August 12, 2026</p>
+
+<p>Archery Shot Counter ("the app") is a Wear OS app that counts archery shots using the watch's wrist accelerometer. This page explains what data the app handles and how.</p>
+
+<h2>Data the app collects</h2>
+<p>None. The app does not collect, transmit, or have access to send any data anywhere. It has no internet permission and makes no network requests of any kind — this is not a policy choice, it's a technical fact of how the app is built (you can verify this yourself: the app's source code is public at <a href="https://github.com/Vemestael/ArcheryShotCounter">github.com/Vemestael/ArcheryShotCounter</a>, and its manifest declares no <code>INTERNET</code> permission).</p>
+
+<h2>Data the app stores</h2>
+<p>The app stores the following information, entirely on your own watch, in a local database it does not share with anyone:</p>
+<ul>
+  <li>Training session records: start/end time, shot count</li>
+  <li>Individual shot records: timestamp and the accelerometer magnitude that triggered detection</li>
+  <li>Your in-app settings: sensitivity, cooldown, language, and similar preferences</li>
+</ul>
+<p>None of this ever leaves your device through the app itself. You can delete it at any time by removing individual sessions in the app, using the app's own JSON export/import feature to manage your own copy of it, or uninstalling the app entirely.</p>
+
+<h2>Android system backup</h2>
+<p>The app opts into Android's standard Auto Backup / device-transfer feature (a platform feature, not something this app implements itself). If enabled on your watch, Android may include the app's local data in the encrypted backup it already keeps in your own Google Account, the same way it does for most apps on your device. That backup is created, stored, and governed entirely by Google's own privacy policy — the developer of this app has no access to it.</p>
+
+<h2>Permissions the app requests</h2>
+<ul>
+  <li><code>VIBRATE</code> — to buzz the watch when a shot is detected</li>
+  <li><code>WAKE_LOCK</code> — to keep the screen on during an active session</li>
+</ul>
+<p>The app does not request location, camera, microphone, contacts, health data, or any other sensitive permission.</p>
+
+<h2>Third parties</h2>
+<p>The app uses no analytics, advertising, or crash-reporting SDKs, and shares data with no third party, because it has no mechanism to share data with anyone in the first place.</p>
+
+<h2>Children's privacy</h2>
+<p>The app is not directed at children and does not knowingly collect any information from anyone, of any age — see "Data the app collects" above.</p>
+
+<h2>Changes to this policy</h2>
+<p>If this policy ever changes, the update will be posted on this page with a revised "Last updated" date.</p>
+
+<h2>Contact</h2>
+<p>Questions about this policy or the app can be sent to <a href="mailto:vemestael@gmail.com">vemestael@gmail.com</a>.</p>
+
+</body>
+</html>
