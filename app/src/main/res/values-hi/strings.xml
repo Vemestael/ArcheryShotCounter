@@ -47,6 +47,14 @@
     <string name="export_success">निर्यात हो गया</string>
     <string name="export_failed">निर्यात विफल</string>
 
+    <string name="import_button">डेटा आयात करें</string>
+    <string name="import_success">आयात हो गया</string>
+    <string name="import_failed">आयात विफल</string>
+    <string name="import_confirm_title">डेटा आयात करें?</string>
+    <string name="import_confirm_message">इससे मेल खाते डेटा वाले सत्र अधिलेखित हो जाएंगे। इसे पूर्ववत नहीं किया जा सकता।</string>
+    <string name="import_confirm_ok">आयात करें</string>
+    <string name="import_confirm_cancel">रद्द करें</string>
+
     <string name="aod_prompt_title">Always On Display</string>
     <string name="aod_prompt_message">सत्र के दौरान स्क्रीन धीमी चमक के साथ चालू रहेगी। बेहतर बैटरी लाइफ के लिए घड़ी की सेटिंग्स में Always On Display चालू करें।</string>
     <string name="aod_prompt_open_settings">सेटिंग्स खोलें</string>

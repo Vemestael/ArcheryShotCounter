@@ -39,6 +39,9 @@ interface ShotDao {
 
     @Query("DELETE FROM shots WHERE id IN (SELECT id FROM shots WHERE sessionId = :sessionId ORDER BY timestamp DESC LIMIT :count)")
     fun deleteLatest(sessionId: Long, count: Int)
+
+    @Query("DELETE FROM shots WHERE sessionId = :sessionId")
+    fun deleteAllForSession(sessionId: Long)
 }
 
 private val MIGRATION_1_2 = object : Migration(1, 2) {

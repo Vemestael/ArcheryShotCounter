@@ -47,6 +47,14 @@
     <string name="export_success">Экспортировано</string>
     <string name="export_failed">Ошибка экспорта</string>
 
+    <string name="import_button">Импортировать данные</string>
+    <string name="import_success">Импортировано</string>
+    <string name="import_failed">Ошибка импорта</string>
+    <string name="import_confirm_title">Импортировать данные?</string>
+    <string name="import_confirm_message">Это перезапишет сессии с совпадающими данными. Отменить будет нельзя.</string>
+    <string name="import_confirm_ok">Импортировать</string>
+    <string name="import_confirm_cancel">Отмена</string>
+
     <string name="aod_prompt_title">Always On Display</string>
     <string name="aod_prompt_message">Во время тренировки экран будет оставаться включённым в приглушённом режиме. Включи Always On Display в настройках часов для лучшей автономности.</string>
     <string name="aod_prompt_open_settings">Открыть настройки</string>

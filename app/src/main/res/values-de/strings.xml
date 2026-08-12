@@ -47,6 +47,14 @@
     <string name="export_success">Exportiert</string>
     <string name="export_failed">Export fehlgeschlagen</string>
 
+    <string name="import_button">Daten importieren</string>
+    <string name="import_success">Importiert</string>
+    <string name="import_failed">Import fehlgeschlagen</string>
+    <string name="import_confirm_title">Daten importieren?</string>
+    <string name="import_confirm_message">Sitzungen mit übereinstimmenden Daten werden überschrieben. Dies kann nicht rückgängig gemacht werden.</string>
+    <string name="import_confirm_ok">Importieren</string>
+    <string name="import_confirm_cancel">Abbrechen</string>
+
     <string name="aod_prompt_title">Always On Display</string>
     <string name="aod_prompt_message">Der Bildschirm bleibt während einer Sitzung gedimmt eingeschaltet. Aktiviere Always On Display in den Uhreinstellungen für eine bessere Akkulaufzeit.</string>
     <string name="aod_prompt_open_settings">Einstellungen öffnen</string>

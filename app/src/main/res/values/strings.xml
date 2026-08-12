@@ -48,6 +48,14 @@
     <string name="export_success">Exported</string>
     <string name="export_failed">Export failed</string>
 
+    <string name="import_button">Import data</string>
+    <string name="import_success">Imported</string>
+    <string name="import_failed">Import failed</string>
+    <string name="import_confirm_title">Import data?</string>
+    <string name="import_confirm_message">This will overwrite any sessions with matching data. This can\'t be undone.</string>
+    <string name="import_confirm_ok">Import</string>
+    <string name="import_confirm_cancel">Cancel</string>
+
     <string name="aod_prompt_title">Always On Display</string>
     <string name="aod_prompt_message">The screen will stay on dimmed during a session. Enable Always On Display in watch settings for better battery life.</string>
     <string name="aod_prompt_open_settings">Open settings</string>

@@ -47,6 +47,14 @@
     <string name="export_success">Exportado</string>
     <string name="export_failed">Falha na exportação</string>
 
+    <string name="import_button">Importar dados</string>
+    <string name="import_success">Importado</string>
+    <string name="import_failed">Falha na importação</string>
+    <string name="import_confirm_title">Importar dados?</string>
+    <string name="import_confirm_message">Isso substituirá sessões com dados correspondentes. Não pode ser desfeito.</string>
+    <string name="import_confirm_ok">Importar</string>
+    <string name="import_confirm_cancel">Cancelar</string>
+
     <string name="aod_prompt_title">Always On Display</string>
     <string name="aod_prompt_message">A tela permanecerá acesa e escurecida durante uma sessão. Ative o Always On Display nas configurações do relógio para melhor duração da bateria.</string>
     <string name="aod_prompt_open_settings">Abrir configurações</string>

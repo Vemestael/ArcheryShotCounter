@@ -112,6 +112,14 @@ class MainActivity : ComponentActivity() {
         if (uri != null) exportData(uri)
     }
 
+    private var importStatus by mutableStateOf<String?>(null)
+    private val importStatusHandler = Handler(Looper.getMainLooper())
+    private val importStatusHideRunnable = Runnable { importStatus = null }
+    private var pendingImportUri by mutableStateOf<Uri?>(null)
+    private val importLauncher = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) pendingImportUri = uri
+    }
+
     private var ambientAvailability = AmbientAvailability.UNKNOWN
     private var showAodPrompt by mutableStateOf(false)
 
@@ -217,6 +225,11 @@ class MainActivity : ComponentActivity() {
                     lastShotMagnitude = lastShotMagnitude,
                     exportStatus = exportStatus,
                     onExportData = ::startExport,
+                    importStatus = importStatus,
+                    onImportData = ::startImport,
+                    pendingImportUri = pendingImportUri,
+                    onConfirmImport = ::confirmImport,
+                    onCancelImport = ::cancelImport,
                     showAodPrompt = showAodPrompt,
                     onOpenDisplaySettings = { dismissAodPrompt(openSettings = true) },
                     onDismissAodPrompt = { dismissAodPrompt(openSettings = false) },
@@ -507,6 +520,48 @@ class MainActivity : ComponentActivity() {
         exportStatusHandler.postDelayed(exportStatusHideRunnable, 3000)
     }
 
+    private fun startImport() {
+        importLauncher.launch(arrayOf("application/json"))
+    }
+
+    private fun cancelImport() {
+        pendingImportUri = null
+    }
+
+    private fun confirmImport() {
+        val uri = pendingImportUri ?: return
+        pendingImportUri = null
+        dbExecutor.execute {
+            val success = try {
+                val json = contentResolver.openInputStream(uri)?.use { it.readBytes().decodeToString() }
+                    ?: throw java.io.IOException("Could not open $uri")
+                val imported = parseImportJson(json)
+                imported.forEach { (session, shots) ->
+                    database.sessionDao().insertOrUpdate(session)
+                    database.shotDao().deleteAllForSession(session.id)
+                    shots.forEach { database.shotDao().insert(it) }
+                }
+                true
+            } catch (e: Exception) {
+                false
+            }
+            val all = if (success) database.sessionDao().getAll() else null
+            runOnUiThread {
+                if (all != null) {
+                    sessions.clear()
+                    sessions.addAll(all)
+                }
+                showImportStatus(success)
+            }
+        }
+    }
+
+    private fun showImportStatus(success: Boolean) {
+        importStatus = getString(if (success) R.string.import_success else R.string.import_failed)
+        importStatusHandler.removeCallbacks(importStatusHideRunnable)
+        importStatusHandler.postDelayed(importStatusHideRunnable, 3000)
+    }
+
     private fun clearPendingSession() {
         getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit {
             remove(KEY_PENDING_ID)
@@ -547,6 +602,7 @@ class MainActivity : ComponentActivity() {
         cancelAutoPause()
         magnitudeHandler.removeCallbacks(magnitudeHideRunnable)
         exportStatusHandler.removeCallbacks(exportStatusHideRunnable)
+        importStatusHandler.removeCallbacks(importStatusHideRunnable)
         shotDetector.stop()
         dbExecutor.shutdown()
     }
@@ -570,6 +626,11 @@ fun ArcheryApp(
     lastShotMagnitude: Float?,
     exportStatus: String?,
     onExportData: () -> Unit,
+    importStatus: String?,
+    onImportData: () -> Unit,
+    pendingImportUri: Uri?,
+    onConfirmImport: () -> Unit,
+    onCancelImport: () -> Unit,
     showAodPrompt: Boolean,
     onOpenDisplaySettings: () -> Unit,
     onDismissAodPrompt: () -> Unit,
@@ -642,7 +703,9 @@ fun ArcheryApp(
                         onAutoPauseEnabledChange = onAutoPauseEnabledChange,
                         onAutoPauseDurationChange = onAutoPauseDurationChange,
                         exportStatus = exportStatus,
-                        onExportData = onExportData
+                        onExportData = onExportData,
+                        importStatus = importStatus,
+                        onImportData = onImportData
                     )
                 }
             }
@@ -671,6 +734,12 @@ fun ArcheryApp(
                 AodPromptDialog(
                     onOpenSettings = onOpenDisplaySettings,
                     onDismiss = onDismissAodPrompt
+                )
+            }
+            if (pendingImportUri != null) {
+                ImportConfirmDialog(
+                    onConfirm = onConfirmImport,
+                    onCancel = onCancelImport
                 )
             }
         }

@@ -47,6 +47,14 @@
     <string name="export_success">Dışa aktarıldı</string>
     <string name="export_failed">Dışa aktarma başarısız</string>
 
+    <string name="import_button">Verileri içe aktar</string>
+    <string name="import_success">İçe aktarıldı</string>
+    <string name="import_failed">İçe aktarma başarısız</string>
+    <string name="import_confirm_title">Veriler içe aktarılsın mı?</string>
+    <string name="import_confirm_message">Eşleşen oturumların üzerine yazılacak. Bu işlem geri alınamaz.</string>
+    <string name="import_confirm_ok">İçe aktar</string>
+    <string name="import_confirm_cancel">İptal</string>
+
     <string name="aod_prompt_title">Always On Display</string>
     <string name="aod_prompt_message">Antrenman sırasında ekran sönük şekilde açık kalır. Daha iyi pil ömrü için saat ayarlarından Always On Display\'i etkinleştir.</string>
     <string name="aod_prompt_open_settings">Ayarları aç</string>

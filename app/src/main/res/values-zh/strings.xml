@@ -47,6 +47,14 @@
     <string name="export_success">已导出</string>
     <string name="export_failed">导出失败</string>
 
+    <string name="import_button">导入数据</string>
+    <string name="import_success">已导入</string>
+    <string name="import_failed">导入失败</string>
+    <string name="import_confirm_title">导入数据？</string>
+    <string name="import_confirm_message">这将覆盖数据匹配的训练记录，且无法撤销。</string>
+    <string name="import_confirm_ok">导入</string>
+    <string name="import_confirm_cancel">取消</string>
+
     <string name="aod_prompt_title">Always On Display</string>
     <string name="aod_prompt_message">训练期间屏幕会保持微暗常亮。建议在手表设置中开启 Always On Display 以获得更长的续航时间。</string>
     <string name="aod_prompt_open_settings">打开设置</string>

@@ -47,6 +47,14 @@
     <string name="export_success">تم التصدير</string>
     <string name="export_failed">فشل التصدير</string>
 
+    <string name="import_button">استيراد البيانات</string>
+    <string name="import_success">تم الاستيراد</string>
+    <string name="import_failed">فشل الاستيراد</string>
+    <string name="import_confirm_title">استيراد البيانات؟</string>
+    <string name="import_confirm_message">سيؤدي هذا إلى الكتابة فوق الجلسات ذات البيانات المطابقة. لا يمكن التراجع عن هذا.</string>
+    <string name="import_confirm_ok">استيراد</string>
+    <string name="import_confirm_cancel">إلغاء</string>
+
     <string name="aod_prompt_title">Always On Display</string>
     <string name="aod_prompt_message">ستبقى الشاشة مضاءة بشكل خافت أثناء الجلسة. فعّل خاصية Always On Display في إعدادات الساعة لعمر بطارية أفضل.</string>
     <string name="aod_prompt_open_settings">فتح الإعدادات</string>

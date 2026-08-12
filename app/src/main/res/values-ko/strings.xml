@@ -47,6 +47,14 @@
     <string name="export_success">내보내기 완료</string>
     <string name="export_failed">내보내기 실패</string>
 
+    <string name="import_button">데이터 가져오기</string>
+    <string name="import_success">가져오기 완료</string>
+    <string name="import_failed">가져오기 실패</string>
+    <string name="import_confirm_title">데이터를 가져올까요?</string>
+    <string name="import_confirm_message">일치하는 세션은 덮어씌워집니다. 되돌릴 수 없습니다.</string>
+    <string name="import_confirm_ok">가져오기</string>
+    <string name="import_confirm_cancel">취소</string>
+
     <string name="aod_prompt_title">Always On Display</string>
     <string name="aod_prompt_message">세션 중에는 화면이 어둡게 켜진 상태로 유지됩니다. 배터리 수명을 늘리려면 시계 설정에서 Always On Display를 켜세요.</string>
     <string name="aod_prompt_open_settings">설정 열기</string>
