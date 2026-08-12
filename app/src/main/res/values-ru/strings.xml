@@ -23,6 +23,8 @@
     <string name="sensitivity_low">Низкая (20 м/с²)</string>
     <string name="sensitivity_custom">Свой вариант</string>
 
+    <string name="cooldown_title">Задержка между выстрелами</string>
+
     <string name="lang_section_title">Язык</string>
     <string name="lang_system">Системный</string>
 

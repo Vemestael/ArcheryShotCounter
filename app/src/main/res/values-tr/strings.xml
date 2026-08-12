@@ -23,6 +23,8 @@
     <string name="sensitivity_low">Düşük (20 m/s²)</string>
     <string name="sensitivity_custom">Özel</string>
 
+    <string name="cooldown_title">Atış gecikmesi</string>
+
     <string name="lang_section_title">Dil</string>
     <string name="lang_system">Sistem</string>
 

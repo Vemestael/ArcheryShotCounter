@@ -23,6 +23,8 @@
     <string name="sensitivity_low">कम (20 m/s²)</string>
     <string name="sensitivity_custom">कस्टम</string>
 
+    <string name="cooldown_title">शॉट्स के बीच विलंब</string>
+
     <string name="lang_section_title">भाषा</string>
     <string name="lang_system">सिस्टम</string>
 

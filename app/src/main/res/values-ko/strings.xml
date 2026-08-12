@@ -23,6 +23,8 @@
     <string name="sensitivity_low">낮음 (20 m/s²)</string>
     <string name="sensitivity_custom">사용자 지정</string>
 
+    <string name="cooldown_title">발사 간격</string>
+
     <string name="lang_section_title">언어</string>
     <string name="lang_system">시스템</string>
 

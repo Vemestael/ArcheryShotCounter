@@ -23,6 +23,8 @@
     <string name="sensitivity_low">منخفضة (20 م/ث²)</string>
     <string name="sensitivity_custom">مخصص</string>
 
+    <string name="cooldown_title">تأخير بين الرميات</string>
+
     <string name="lang_section_title">اللغة</string>
     <string name="lang_system">النظام</string>
 

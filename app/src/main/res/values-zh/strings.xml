@@ -23,6 +23,8 @@
     <string name="sensitivity_low">低 (20 m/s²)</string>
     <string name="sensitivity_custom">自定义</string>
 
+    <string name="cooldown_title">射击间隔</string>
+
     <string name="lang_section_title">语言</string>
     <string name="lang_system">系统</string>
 

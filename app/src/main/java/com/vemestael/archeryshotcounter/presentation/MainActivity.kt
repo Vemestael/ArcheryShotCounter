@@ -42,6 +42,7 @@ private const val KEY_PENDING_ID = "pending_id"
 private const val KEY_PENDING_START = "pending_start"
 private const val KEY_PENDING_LAST = "pending_last"
 private const val KEY_PENDING_COUNT = "pending_count"
+private const val KEY_SHOT_COOLDOWN_SECONDS = "shot_cooldown_seconds"
 private const val KEY_SHOTS_PER_END = "shots_per_end"
 private const val KEY_AUTO_PAUSE_ENABLED = "auto_pause_enabled"
 private const val KEY_AUTO_PAUSE_DURATION = "auto_pause_duration"
@@ -60,6 +61,7 @@ class MainActivity : ComponentActivity() {
 
     private var sensitivity by mutableStateOf(Sensitivity.MEDIUM)
     private var customThreshold by mutableIntStateOf(15)
+    private var shotCooldownSeconds by mutableIntStateOf((ShotDetector.DEFAULT_COOLDOWN_MS / 1000L).toInt())
     private var currentLanguage by mutableStateOf(AppLanguage.SYSTEM)
 
     private var shotsPerEnd by mutableIntStateOf(0)
@@ -123,8 +125,10 @@ class MainActivity : ComponentActivity() {
         sensitivity = Sensitivity.entries.find { it.name == prefs.getString(KEY_SENSITIVITY, null) }
             ?: Sensitivity.MEDIUM
         customThreshold = prefs.getInt(KEY_CUSTOM_THRESHOLD, 15)
+        shotCooldownSeconds = prefs.getInt(KEY_SHOT_COOLDOWN_SECONDS, (ShotDetector.DEFAULT_COOLDOWN_MS / 1000L).toInt())
         shotDetector.sensitivity = sensitivity
         shotDetector.customThreshold = customThreshold.toFloat()
+        shotDetector.cooldownMs = shotCooldownSeconds * 1000L
         shotsPerEnd = prefs.getInt(KEY_SHOTS_PER_END, 0)
         autoPauseEnabled = prefs.getBoolean(KEY_AUTO_PAUSE_ENABLED, false)
         autoPauseDuration = prefs.getInt(KEY_AUTO_PAUSE_DURATION, 60)
@@ -161,6 +165,7 @@ class MainActivity : ComponentActivity() {
                     sensitivity = sensitivity,
                     customThreshold = customThreshold,
                     currentLanguage = currentLanguage,
+                    shotCooldownSeconds = shotCooldownSeconds,
                     shotsPerEnd = shotsPerEnd,
                     autoPauseEnabled = autoPauseEnabled,
                     autoPauseDuration = autoPauseDuration,
@@ -181,6 +186,12 @@ class MainActivity : ComponentActivity() {
                         shotDetector.customThreshold = value.toFloat()
                         getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
                             .edit { putInt(KEY_CUSTOM_THRESHOLD, value) }
+                    },
+                    onShotCooldownChange = { value ->
+                        shotCooldownSeconds = value
+                        shotDetector.cooldownMs = value * 1000L
+                        getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+                            .edit { putInt(KEY_SHOT_COOLDOWN_SECONDS, value) }
                     },
                     onLanguageChange = ::changeLanguage,
                     onEditSession = ::editSession,
@@ -284,6 +295,7 @@ class MainActivity : ComponentActivity() {
     private fun startDetection() {
         shotDetector.sensitivity = sensitivity
         shotDetector.customThreshold = customThreshold.toFloat()
+        shotDetector.cooldownMs = shotCooldownSeconds * 1000L
         shotDetector.start()
         isDetecting = true
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
@@ -446,6 +458,7 @@ fun ArcheryApp(
     sensitivity: Sensitivity,
     customThreshold: Int,
     currentLanguage: AppLanguage,
+    shotCooldownSeconds: Int,
     shotsPerEnd: Int,
     autoPauseEnabled: Boolean,
     autoPauseDuration: Int,
@@ -457,6 +470,7 @@ fun ArcheryApp(
     onManualAdjust: (Int) -> Unit,
     onSensitivityChange: (Sensitivity) -> Unit,
     onCustomThresholdChange: (Int) -> Unit,
+    onShotCooldownChange: (Int) -> Unit,
     onLanguageChange: (AppLanguage) -> Unit,
     onEditSession: (Session) -> Unit,
     onDeleteSession: (Session) -> Unit,
@@ -499,12 +513,14 @@ fun ArcheryApp(
                         sensitivity = sensitivity,
                         customThreshold = customThreshold,
                         currentLanguage = currentLanguage,
+                        shotCooldownSeconds = shotCooldownSeconds,
                         shotsPerEnd = shotsPerEnd,
                         autoPauseEnabled = autoPauseEnabled,
                         autoPauseDuration = autoPauseDuration,
                         onSensitivityChange = onSensitivityChange,
                         onCustomThresholdChange = onCustomThresholdChange,
                         onShowLanguagePicker = { showLanguagePicker = true },
+                        onShotCooldownChange = onShotCooldownChange,
                         onShotsPerEndChange = onShotsPerEndChange,
                         onAutoPauseEnabledChange = onAutoPauseEnabledChange,
                         onAutoPauseDurationChange = onAutoPauseDurationChange

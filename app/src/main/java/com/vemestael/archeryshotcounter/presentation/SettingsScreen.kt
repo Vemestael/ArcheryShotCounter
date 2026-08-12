@@ -53,12 +53,14 @@ fun SettingsScreen(
     sensitivity: Sensitivity,
     customThreshold: Int,
     currentLanguage: AppLanguage,
+    shotCooldownSeconds: Int,
     shotsPerEnd: Int,
     autoPauseEnabled: Boolean,
     autoPauseDuration: Int,
     onSensitivityChange: (Sensitivity) -> Unit,
     onCustomThresholdChange: (Int) -> Unit,
     onShowLanguagePicker: () -> Unit,
+    onShotCooldownChange: (Int) -> Unit,
     onShotsPerEndChange: (Int) -> Unit,
     onAutoPauseEnabledChange: (Boolean) -> Unit,
     onAutoPauseDurationChange: (Int) -> Unit
@@ -150,6 +152,49 @@ fun SettingsScreen(
                             color = Color(0xFF666666)
                         )
                     }
+                }
+            }
+
+            item {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 12.dp, bottom = 4.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = stringResource(R.string.cooldown_title),
+                        style = MaterialTheme.typography.titleSmall,
+                        color = Color(0xFFCCCCCC)
+                    )
+                }
+            }
+
+            item {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp, vertical = 4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Button(
+                        onClick = { if (shotCooldownSeconds > 1) onShotCooldownChange(shotCooldownSeconds - 1) },
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF3A3A3A), contentColor = Color(0xFFCCCCCC))
+                    ) { Text("−", fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()) }
+                    Text(
+                        text = "$shotCooldownSeconds${stringResource(R.string.time_s)}",
+                        modifier = Modifier.weight(1f),
+                        textAlign = TextAlign.Center,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Button(
+                        onClick = { if (shotCooldownSeconds < 30) onShotCooldownChange(shotCooldownSeconds + 1) },
+                        modifier = Modifier.weight(1f)
+                    ) { Text("+", fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()) }
                 }
             }
 

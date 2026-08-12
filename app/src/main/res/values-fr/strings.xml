@@ -23,6 +23,8 @@
     <string name="sensitivity_low">Basse (20 m/s²)</string>
     <string name="sensitivity_custom">Personnalisé</string>
 
+    <string name="cooldown_title">Délai entre les tirs</string>
+
     <string name="lang_section_title">Langue</string>
     <string name="lang_system">Système</string>
 

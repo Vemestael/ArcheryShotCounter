@@ -23,6 +23,8 @@
     <string name="sensitivity_low">Niedrig (20 m/s²)</string>
     <string name="sensitivity_custom">Benutzerdefiniert</string>
 
+    <string name="cooldown_title">Schussverzögerung</string>
+
     <string name="lang_section_title">Sprache</string>
     <string name="lang_system">System</string>
 

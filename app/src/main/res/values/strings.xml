@@ -23,6 +23,8 @@
     <string name="sensitivity_low">Low (20 m/s²)</string>
     <string name="sensitivity_custom">Custom</string>
 
+    <string name="cooldown_title">Shot cooldown</string>
+
     <string name="lang_section_title">Language</string>
     <string name="lang_system">System</string>
 
