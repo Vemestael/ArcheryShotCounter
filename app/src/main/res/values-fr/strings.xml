@@ -41,4 +41,9 @@
 
     <string name="btn_detail">Détails</string>
     <string name="shots_empty">Aucune donnée</string>
+
+    <string name="aod_prompt_title">Always On Display</string>
+    <string name="aod_prompt_message">L\'écran restera allumé en mode atténué pendant une séance. Active Always On Display dans les paramètres de la montre pour une meilleure autonomie.</string>
+    <string name="aod_prompt_open_settings">Ouvrir les paramètres</string>
+    <string name="aod_prompt_dismiss">Pas maintenant</string>
 </resources>

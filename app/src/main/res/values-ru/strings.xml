@@ -41,4 +41,9 @@
 
     <string name="btn_detail">Детальнее</string>
     <string name="shots_empty">Нет данных</string>
+
+    <string name="aod_prompt_title">Always On Display</string>
+    <string name="aod_prompt_message">Во время тренировки экран будет оставаться включённым в приглушённом режиме. Включи Always On Display в настройках часов для лучшей автономности.</string>
+    <string name="aod_prompt_open_settings">Открыть настройки</string>
+    <string name="aod_prompt_dismiss">Не сейчас</string>
 </resources>

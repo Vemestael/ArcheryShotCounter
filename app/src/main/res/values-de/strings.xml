@@ -41,4 +41,9 @@
 
     <string name="btn_detail">Details</string>
     <string name="shots_empty">Keine Daten</string>
+
+    <string name="aod_prompt_title">Always On Display</string>
+    <string name="aod_prompt_message">Der Bildschirm bleibt während einer Sitzung gedimmt eingeschaltet. Aktiviere Always On Display in den Uhreinstellungen für eine bessere Akkulaufzeit.</string>
+    <string name="aod_prompt_open_settings">Einstellungen öffnen</string>
+    <string name="aod_prompt_dismiss">Nicht jetzt</string>
 </resources>

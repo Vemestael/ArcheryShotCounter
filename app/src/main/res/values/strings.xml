@@ -42,4 +42,9 @@
 
     <string name="btn_detail">Details</string>
     <string name="shots_empty">No data</string>
+
+    <string name="aod_prompt_title">Always On Display</string>
+    <string name="aod_prompt_message">The screen will stay on dimmed during a session. Enable Always On Display in watch settings for better battery life.</string>
+    <string name="aod_prompt_open_settings">Open settings</string>
+    <string name="aod_prompt_dismiss">Not now</string>
 </resources>

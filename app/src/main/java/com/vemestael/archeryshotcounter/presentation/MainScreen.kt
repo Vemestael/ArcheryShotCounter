@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -303,6 +304,39 @@ fun MainScreen(
                         .height(16.dp)
                 )
             }
+        }
+    }
+}
+
+@Composable
+fun AmbientScreen(
+    shotCount: Int,
+    currentSession: Session?,
+    isDetecting: Boolean
+) {
+    val statusText = when {
+        currentSession == null -> stringResource(R.string.status_ready)
+        isDetecting -> stringResource(R.string.status_detecting)
+        else -> stringResource(R.string.status_paused)
+    }
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                text = "$shotCount",
+                fontSize = 56.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
+            )
+            Text(
+                text = statusText,
+                style = MaterialTheme.typography.labelSmall,
+                color = Color(0xFF888888)
+            )
         }
     }
 }

@@ -41,4 +41,9 @@
 
     <string name="btn_detail">विवरण</string>
     <string name="shots_empty">कोई डेटा नहीं</string>
+
+    <string name="aod_prompt_title">Always On Display</string>
+    <string name="aod_prompt_message">सत्र के दौरान स्क्रीन धीमी चमक के साथ चालू रहेगी। बेहतर बैटरी लाइफ के लिए घड़ी की सेटिंग्स में Always On Display चालू करें।</string>
+    <string name="aod_prompt_open_settings">सेटिंग्स खोलें</string>
+    <string name="aod_prompt_dismiss">अभी नहीं</string>
 </resources>

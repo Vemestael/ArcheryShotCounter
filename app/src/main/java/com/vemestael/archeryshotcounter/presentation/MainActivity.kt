@@ -1,6 +1,7 @@
 package com.vemestael.archeryshotcounter.presentation
 
 import android.content.Context
+import android.content.Intent
 import android.content.res.Configuration
 import android.hardware.SensorManager
 import android.os.Build
@@ -11,6 +12,7 @@ import android.os.Looper
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
+import android.provider.Settings
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -26,6 +28,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.core.content.edit
+import androidx.wear.ambient.AmbientLifecycleObserver
 import androidx.wear.compose.foundation.pager.HorizontalPager
 import androidx.wear.compose.foundation.pager.rememberPagerState
 import androidx.wear.compose.material3.AppScaffold
@@ -46,6 +49,15 @@ private const val KEY_SHOT_COOLDOWN_SECONDS = "shot_cooldown_seconds"
 private const val KEY_SHOTS_PER_END = "shots_per_end"
 private const val KEY_AUTO_PAUSE_ENABLED = "auto_pause_enabled"
 private const val KEY_AUTO_PAUSE_DURATION = "auto_pause_duration"
+private const val KEY_AOD_PROMPT_DISMISSED = "aod_prompt_dismissed"
+private const val DIM_SCREEN_BRIGHTNESS = 0.08f
+
+/**
+ * Whether the system's Always On Display / ambient mode is available to fall back on.
+ * Read once from the undocumented `ambient_enabled` Settings.Global key (present on Wear OS
+ * devices regardless of manufacturer) so we know whether to force a dimmed screen ourselves.
+ */
+enum class AmbientAvailability { ENABLED, DISABLED, UNKNOWN }
 
 class MainActivity : ComponentActivity() {
 
@@ -77,6 +89,20 @@ class MainActivity : ComponentActivity() {
     private var detailSession by mutableStateOf<Session?>(null)
     private val detailShots = mutableStateListOf<Shot>()
 
+    private var isAmbient by mutableStateOf(false)
+    private val ambientCallback = object : AmbientLifecycleObserver.AmbientLifecycleCallback {
+        override fun onEnterAmbient(ambientDetails: AmbientLifecycleObserver.AmbientDetails) {
+            isAmbient = true
+        }
+        override fun onExitAmbient() {
+            isAmbient = false
+        }
+    }
+    private val ambientObserver = AmbientLifecycleObserver(this, ambientCallback)
+
+    private var ambientAvailability = AmbientAvailability.UNKNOWN
+    private var showAodPrompt by mutableStateOf(false)
+
     override fun attachBaseContext(newBase: Context) {
         val code = newBase.getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
             .getString(KEY_LANGUAGE, AppLanguage.SYSTEM.code) ?: AppLanguage.SYSTEM.code
@@ -99,6 +125,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         window.attributes = window.attributes.also { it.preferredRefreshRate = 60f }
+        lifecycle.addObserver(ambientObserver)
 
         val sensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
         database = AppDatabase.getInstance(this)
@@ -133,6 +160,10 @@ class MainActivity : ComponentActivity() {
         autoPauseEnabled = prefs.getBoolean(KEY_AUTO_PAUSE_ENABLED, false)
         autoPauseDuration = prefs.getInt(KEY_AUTO_PAUSE_DURATION, 60)
 
+        ambientAvailability = detectAmbientAvailability()
+        showAodPrompt = ambientAvailability == AmbientAvailability.DISABLED &&
+            !prefs.getBoolean(KEY_AOD_PROMPT_DISMISSED, false)
+
         dbExecutor.execute {
             if (database.sessionDao().getAll().isEmpty()) {
                 SessionStorage(applicationContext).load()
@@ -160,6 +191,7 @@ class MainActivity : ComponentActivity() {
                 ArcheryApp(
                     shotCount = shotCount,
                     isDetecting = isDetecting,
+                    isAmbient = isAmbient,
                     currentSession = currentSession,
                     sessions = sessions,
                     sensitivity = sensitivity,
@@ -171,6 +203,9 @@ class MainActivity : ComponentActivity() {
                     autoPauseDuration = autoPauseDuration,
                     autoPauseSecondsLeft = autoPauseSecondsLeft,
                     lastShotMagnitude = lastShotMagnitude,
+                    showAodPrompt = showAodPrompt,
+                    onOpenDisplaySettings = { dismissAodPrompt(openSettings = true) },
+                    onDismissAodPrompt = { dismissAodPrompt(openSettings = false) },
                     onStartOrToggle = ::onPrimaryButton,
                     onSecondaryButton = ::onSecondaryButton,
                     onEnd = ::endSession,
@@ -228,9 +263,36 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    private fun detectAmbientAvailability(): AmbientAvailability =
+        try {
+            val value = Settings.Global.getInt(contentResolver, "ambient_enabled")
+            if (value != 0) AmbientAvailability.ENABLED else AmbientAvailability.DISABLED
+        } catch (e: Settings.SettingNotFoundException) {
+            AmbientAvailability.UNKNOWN
+        }
+
+    private fun dismissAodPrompt(openSettings: Boolean) {
+        showAodPrompt = false
+        getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit { putBoolean(KEY_AOD_PROMPT_DISMISSED, true) }
+        if (openSettings) startActivity(Intent(Settings.ACTION_DISPLAY_SETTINGS))
+    }
+
+    /** Forces a dimmed always-on screen when the system doesn't offer working Ambient Mode. */
+    private fun applyScreenPowerMode() {
+        if (ambientAvailability == AmbientAvailability.ENABLED) return
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        window.attributes = window.attributes.also { it.screenBrightness = DIM_SCREEN_BRIGHTNESS }
+    }
+
+    private fun clearScreenPowerMode() {
+        if (ambientAvailability == AmbientAvailability.ENABLED) return
+        window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        window.attributes = window.attributes.also { it.screenBrightness = WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE }
+    }
+
     private fun startAutoPause() {
         stopDetection()
-        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        applyScreenPowerMode()
         vibrator.vibrate(VibrationEffect.createWaveform(longArrayOf(0, 100, 100, 100), -1))
         autoPauseSecondsLeft = autoPauseDuration
         autoPauseTimer = object : CountDownTimer(autoPauseDuration * 1000L, 1000L) {
@@ -251,7 +313,7 @@ class MainActivity : ComponentActivity() {
         autoPauseTimer?.cancel()
         autoPauseTimer = null
         autoPauseSecondsLeft = -1
-        window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        clearScreenPowerMode()
     }
 
     private fun extendAutoPause(seconds: Int) {
@@ -298,13 +360,13 @@ class MainActivity : ComponentActivity() {
         shotDetector.cooldownMs = shotCooldownSeconds * 1000L
         shotDetector.start()
         isDetecting = true
-        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        applyScreenPowerMode()
     }
 
     private fun stopDetection() {
         shotDetector.stop()
         isDetecting = false
-        window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        clearScreenPowerMode()
     }
 
     private fun endSession() {
@@ -453,6 +515,7 @@ class MainActivity : ComponentActivity() {
 fun ArcheryApp(
     shotCount: Int,
     isDetecting: Boolean,
+    isAmbient: Boolean,
     currentSession: Session?,
     sessions: List<Session>,
     sensitivity: Sensitivity,
@@ -464,6 +527,9 @@ fun ArcheryApp(
     autoPauseDuration: Int,
     autoPauseSecondsLeft: Int,
     lastShotMagnitude: Float?,
+    showAodPrompt: Boolean,
+    onOpenDisplaySettings: () -> Unit,
+    onDismissAodPrompt: () -> Unit,
     onStartOrToggle: () -> Unit,
     onSecondaryButton: () -> Unit,
     onEnd: () -> Unit,
@@ -485,6 +551,14 @@ fun ArcheryApp(
     val pagerState = rememberPagerState(initialPage = 1, pageCount = { 3 })
     var showLanguagePicker by remember { mutableStateOf(false) }
     AppScaffold {
+        if (isAmbient) {
+            AmbientScreen(
+                shotCount = shotCount,
+                currentSession = currentSession,
+                isDetecting = isDetecting
+            )
+            return@AppScaffold
+        }
         Box(modifier = Modifier.fillMaxSize()) {
             HorizontalPager(state = pagerState) { page ->
                 when (page) {
@@ -546,6 +620,12 @@ fun ArcheryApp(
                         onLanguageChange(lang)
                     },
                     onDismiss = { showLanguagePicker = false }
+                )
+            }
+            if (showAodPrompt) {
+                AodPromptDialog(
+                    onOpenSettings = onOpenDisplaySettings,
+                    onDismiss = onDismissAodPrompt
                 )
             }
         }
