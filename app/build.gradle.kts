@@ -87,4 +87,6 @@ dependencies {
     androidTestImplementation(libs.ui.test.junit4)
     debugImplementation(libs.ui.test.manifest)
     debugImplementation(libs.ui.tooling)
+    testImplementation(libs.junit)
+    testImplementation(libs.json)
 }

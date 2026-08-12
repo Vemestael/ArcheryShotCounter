@@ -28,13 +28,10 @@ enum class Sensitivity(@param:StringRes val labelRes: Int, val threshold: Float)
  * Deliberately not using registerListener's maxReportLatencyUs batching: a batched flush
  * delivers several buffered samples through onSensorChanged in one synchronous burst, and
  * in practice this produced double-counted shots when the wrist kept moving right around
- * the cooldown boundary. [awaitingReregister] still guards against any stray same-batch
- * delivery, but unbatched delivery is what actually made double-counting go away.
+ * the cooldown boundary.
  *
- * Confirmed via logging that re-registering after [cooldownMs] can itself immediately catch
- * motion already in progress (observed shots as little as 11-17ms after registerSensor()) if
- * the wrist is still moving right at that instant — not a delivery bug, just unlucky timing.
- * [SETTLE_MS] discards samples for a brief window right after registration to absorb that.
+ * The actual accept/reject decision (same-batch guard + post-registration settle window) lives
+ * in [ShotDetectionPolicy], which is plain Kotlin and unit tested independently of this class.
  */
 class ShotDetector(
     private val sensorManager: SensorManager,
@@ -43,7 +40,6 @@ class ShotDetector(
 
     companion object {
         private const val GRAVITY = 9.81f
-        private const val SETTLE_MS = 300L
         const val DEFAULT_COOLDOWN_MS = 10_000L
     }
 
@@ -52,12 +48,11 @@ class ShotDetector(
     var cooldownMs: Long = DEFAULT_COOLDOWN_MS
 
     private val handler = Handler(Looper.getMainLooper())
+    private val policy = ShotDetectionPolicy()
     private var reregisterRunnable: Runnable? = null
     private var activeSensor: Sensor? = null
     private var isRunning = false
     private var useLinearAccel = true
-    private var awaitingReregister = false
-    private var listeningSinceMs = 0L
 
     fun start() {
         if (isRunning) return
@@ -91,8 +86,7 @@ class ShotDetector(
 
     private fun registerSensor() {
         val sensor = activeSensor ?: return
-        awaitingReregister = false
-        listeningSinceMs = System.currentTimeMillis()
+        policy.onRegistered(System.currentTimeMillis())
         sensorManager.registerListener(this, sensor, SensorManager.SENSOR_DELAY_GAME)
     }
 
@@ -112,18 +106,14 @@ class ShotDetector(
     }
 
     override fun onSensorChanged(event: SensorEvent) {
-        if (awaitingReregister) return
-        if (System.currentTimeMillis() - listeningSinceMs < SETTLE_MS) return
-
         val x = event.values[0]
         val y = event.values[1]
         val z = event.values[2]
         val raw = sqrt(x * x + y * y + z * z)
         val magnitude = if (useLinearAccel) raw else (raw - GRAVITY).coerceAtLeast(0f)
-
         val threshold = if (sensitivity == Sensitivity.CUSTOM) customThreshold else sensitivity.threshold
-        if (magnitude > threshold) {
-            awaitingReregister = true
+
+        if (policy.evaluate(magnitude, threshold, System.currentTimeMillis())) {
             sensorManager.unregisterListener(this)
             onShotDetected(magnitude)
             schedulePendingReregister()
