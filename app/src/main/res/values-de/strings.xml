@@ -44,12 +44,13 @@
 
     <string name="export_title">Daten</string>
     <string name="export_button">Daten exportieren</string>
-    <string name="export_success">Exportiert</string>
+    <string name="export_success">Exportiert nach %1$s</string>
     <string name="export_failed">Export fehlgeschlagen</string>
 
     <string name="import_button">Daten importieren</string>
     <string name="import_success">Importiert</string>
     <string name="import_failed">Import fehlgeschlagen</string>
+    <string name="import_file_not_found">Keine Datei gefunden. Lege eine Datei ab unter: %1$s</string>
     <string name="import_confirm_title">Daten importieren?</string>
     <string name="import_confirm_message">Sitzungen mit übereinstimmenden Daten werden überschrieben. Dies kann nicht rückgängig gemacht werden.</string>
     <string name="import_confirm_ok">Importieren</string>

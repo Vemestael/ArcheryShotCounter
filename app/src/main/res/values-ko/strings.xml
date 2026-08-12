@@ -44,12 +44,13 @@
 
     <string name="export_title">데이터</string>
     <string name="export_button">데이터 내보내기</string>
-    <string name="export_success">내보내기 완료</string>
+    <string name="export_success">%1$s(으)로 내보냈습니다</string>
     <string name="export_failed">내보내기 실패</string>
 
     <string name="import_button">데이터 가져오기</string>
     <string name="import_success">가져오기 완료</string>
     <string name="import_failed">가져오기 실패</string>
+    <string name="import_file_not_found">파일을 찾을 수 없습니다. 다음 위치에 파일을 넣어주세요: %1$s</string>
     <string name="import_confirm_title">데이터를 가져올까요?</string>
     <string name="import_confirm_message">일치하는 세션은 덮어씌워집니다. 되돌릴 수 없습니다.</string>
     <string name="import_confirm_ok">가져오기</string>

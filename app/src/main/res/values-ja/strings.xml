@@ -44,12 +44,13 @@
 
     <string name="export_title">データ</string>
     <string name="export_button">データをエクスポート</string>
-    <string name="export_success">エクスポートしました</string>
+    <string name="export_success">%1$s にエクスポートしました</string>
     <string name="export_failed">エクスポートに失敗しました</string>
 
     <string name="import_button">データをインポート</string>
     <string name="import_success">インポートしました</string>
     <string name="import_failed">インポートに失敗しました</string>
+    <string name="import_file_not_found">ファイルが見つかりません。次の場所にファイルを置いてください: %1$s</string>
     <string name="import_confirm_title">データをインポートしますか？</string>
     <string name="import_confirm_message">一致するセッションは上書きされます。この操作は元に戻せません。</string>
     <string name="import_confirm_ok">インポート</string>

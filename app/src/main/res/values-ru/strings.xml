@@ -44,12 +44,13 @@
 
     <string name="export_title">Данные</string>
     <string name="export_button">Экспортировать данные</string>
-    <string name="export_success">Экспортировано</string>
+    <string name="export_success">Экспортировано в %1$s</string>
     <string name="export_failed">Ошибка экспорта</string>
 
     <string name="import_button">Импортировать данные</string>
     <string name="import_success">Импортировано</string>
     <string name="import_failed">Ошибка импорта</string>
+    <string name="import_file_not_found">Файл не найден. Помести файл сюда: %1$s</string>
     <string name="import_confirm_title">Импортировать данные?</string>
     <string name="import_confirm_message">Это перезапишет сессии с совпадающими данными. Отменить будет нельзя.</string>
     <string name="import_confirm_ok">Импортировать</string>

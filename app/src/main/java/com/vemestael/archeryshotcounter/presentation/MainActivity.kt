@@ -4,7 +4,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
 import android.hardware.SensorManager
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.CountDownTimer
@@ -17,7 +16,6 @@ import android.provider.Settings
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -37,6 +35,8 @@ import androidx.wear.compose.material3.AppScaffold
 import androidx.wear.compose.material3.HorizontalPageIndicator
 import com.vemestael.archeryshotcounter.R
 import com.vemestael.archeryshotcounter.presentation.theme.ArcheryShotCounterTheme
+import java.io.File
+import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -56,6 +56,7 @@ private const val KEY_AUTO_PAUSE_ENABLED = "auto_pause_enabled"
 private const val KEY_AUTO_PAUSE_DURATION = "auto_pause_duration"
 private const val KEY_AOD_PROMPT_DISMISSED = "aod_prompt_dismissed"
 private const val DIM_SCREEN_BRIGHTNESS = 0.08f
+private const val IMPORT_FILENAME = "archery-import.json"
 
 /**
  * Whether the system's Always On Display / ambient mode is available to fall back on.
@@ -105,20 +106,18 @@ class MainActivity : ComponentActivity() {
     }
     private val ambientObserver = AmbientLifecycleObserver(this, ambientCallback)
 
+    // Wear OS has no Storage Access Framework file picker on this hardware (both
+    // ACTION_CREATE_DOCUMENT and ACTION_OPEN_DOCUMENT resolve to a non-functional system stub),
+    // so export/import use a fixed path under getExternalFilesDir() instead of a picker — no
+    // permission needed, and reachable without root via `adb pull`/`adb push`.
     private var exportStatus by mutableStateOf<String?>(null)
     private val exportStatusHandler = Handler(Looper.getMainLooper())
     private val exportStatusHideRunnable = Runnable { exportStatus = null }
-    private val exportLauncher = registerForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
-        if (uri != null) exportData(uri)
-    }
 
     private var importStatus by mutableStateOf<String?>(null)
     private val importStatusHandler = Handler(Looper.getMainLooper())
     private val importStatusHideRunnable = Runnable { importStatus = null }
-    private var pendingImportUri by mutableStateOf<Uri?>(null)
-    private val importLauncher = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-        if (uri != null) pendingImportUri = uri
-    }
+    private var showImportConfirm by mutableStateOf(false)
 
     private var ambientAvailability = AmbientAvailability.UNKNOWN
     private var showAodPrompt by mutableStateOf(false)
@@ -227,7 +226,7 @@ class MainActivity : ComponentActivity() {
                     onExportData = ::startExport,
                     importStatus = importStatus,
                     onImportData = ::startImport,
-                    pendingImportUri = pendingImportUri,
+                    showImportConfirm = showImportConfirm,
                     onConfirmImport = ::confirmImport,
                     onCancelImport = ::cancelImport,
                     showAodPrompt = showAodPrompt,
@@ -495,46 +494,52 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun startExport() {
-        val stamp = SimpleDateFormat("yyyy-MM-dd_HHmm", Locale.US).format(Date())
-        exportLauncher.launch("archery-export-$stamp.json")
-    }
-
-    private fun exportData(uri: Uri) {
         dbExecutor.execute {
-            val success = try {
+            val path = try {
                 val allSessions = database.sessionDao().getAll()
                 val allShots = database.shotDao().getAll()
                 val json = buildExportJson(allSessions, allShots)
-                contentResolver.openOutputStream(uri)?.use { it.write(json.toByteArray()) }
-                true
+                val dir = getExternalFilesDir(null) ?: throw IOException("no external files dir")
+                val stamp = SimpleDateFormat("yyyy-MM-dd_HHmm", Locale.US).format(Date())
+                val file = File(dir, "archery-export-$stamp.json")
+                file.writeText(json)
+                file.absolutePath
             } catch (e: Exception) {
-                false
+                null
             }
-            runOnUiThread { showExportStatus(success) }
+            runOnUiThread { showExportStatus(path) }
         }
     }
 
-    private fun showExportStatus(success: Boolean) {
-        exportStatus = getString(if (success) R.string.export_success else R.string.export_failed)
+    private fun showExportStatus(path: String?) {
+        exportStatus = if (path != null) getString(R.string.export_success, path) else getString(R.string.export_failed)
         exportStatusHandler.removeCallbacks(exportStatusHideRunnable)
-        exportStatusHandler.postDelayed(exportStatusHideRunnable, 3000)
+        exportStatusHandler.postDelayed(exportStatusHideRunnable, 6000)
     }
 
     private fun startImport() {
-        importLauncher.launch(arrayOf("application/json"))
+        val dir = getExternalFilesDir(null)
+        val file = dir?.let { File(it, IMPORT_FILENAME) }
+        if (file == null || !file.exists()) {
+            val pathHint = if (dir != null) File(dir, IMPORT_FILENAME).absolutePath else IMPORT_FILENAME
+            importStatus = getString(R.string.import_file_not_found, pathHint)
+            importStatusHandler.removeCallbacks(importStatusHideRunnable)
+            importStatusHandler.postDelayed(importStatusHideRunnable, 6000)
+            return
+        }
+        showImportConfirm = true
     }
 
     private fun cancelImport() {
-        pendingImportUri = null
+        showImportConfirm = false
     }
 
     private fun confirmImport() {
-        val uri = pendingImportUri ?: return
-        pendingImportUri = null
+        showImportConfirm = false
         dbExecutor.execute {
             val success = try {
-                val json = contentResolver.openInputStream(uri)?.use { it.readBytes().decodeToString() }
-                    ?: throw java.io.IOException("Could not open $uri")
+                val dir = getExternalFilesDir(null) ?: throw IOException("no external files dir")
+                val json = File(dir, IMPORT_FILENAME).readText()
                 val imported = parseImportJson(json)
                 imported.forEach { (session, shots) ->
                     database.sessionDao().insertOrUpdate(session)
@@ -628,7 +633,7 @@ fun ArcheryApp(
     onExportData: () -> Unit,
     importStatus: String?,
     onImportData: () -> Unit,
-    pendingImportUri: Uri?,
+    showImportConfirm: Boolean,
     onConfirmImport: () -> Unit,
     onCancelImport: () -> Unit,
     showAodPrompt: Boolean,
@@ -736,7 +741,7 @@ fun ArcheryApp(
                     onDismiss = onDismissAodPrompt
                 )
             }
-            if (pendingImportUri != null) {
+            if (showImportConfirm) {
                 ImportConfirmDialog(
                     onConfirm = onConfirmImport,
                     onCancel = onCancelImport

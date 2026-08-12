@@ -44,12 +44,13 @@
 
     <string name="export_title">Veri</string>
     <string name="export_button">Verileri dışa aktar</string>
-    <string name="export_success">Dışa aktarıldı</string>
+    <string name="export_success">%1$s konumuna aktarıldı</string>
     <string name="export_failed">Dışa aktarma başarısız</string>
 
     <string name="import_button">Verileri içe aktar</string>
     <string name="import_success">İçe aktarıldı</string>
     <string name="import_failed">İçe aktarma başarısız</string>
+    <string name="import_file_not_found">Dosya bulunamadı. Şuraya bir dosya koy: %1$s</string>
     <string name="import_confirm_title">Veriler içe aktarılsın mı?</string>
     <string name="import_confirm_message">Eşleşen oturumların üzerine yazılacak. Bu işlem geri alınamaz.</string>
     <string name="import_confirm_ok">İçe aktar</string>

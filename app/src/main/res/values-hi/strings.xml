@@ -44,12 +44,13 @@
 
     <string name="export_title">डेटा</string>
     <string name="export_button">डेटा निर्यात करें</string>
-    <string name="export_success">निर्यात हो गया</string>
+    <string name="export_success">%1$s में निर्यात हो गया</string>
     <string name="export_failed">निर्यात विफल</string>
 
     <string name="import_button">डेटा आयात करें</string>
     <string name="import_success">आयात हो गया</string>
     <string name="import_failed">आयात विफल</string>
+    <string name="import_file_not_found">फ़ाइल नहीं मिली। यहाँ फ़ाइल रखें: %1$s</string>
     <string name="import_confirm_title">डेटा आयात करें?</string>
     <string name="import_confirm_message">इससे मेल खाते डेटा वाले सत्र अधिलेखित हो जाएंगे। इसे पूर्ववत नहीं किया जा सकता।</string>
     <string name="import_confirm_ok">आयात करें</string>

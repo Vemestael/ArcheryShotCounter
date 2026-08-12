@@ -44,12 +44,13 @@
 
     <string name="export_title">数据</string>
     <string name="export_button">导出数据</string>
-    <string name="export_success">已导出</string>
+    <string name="export_success">已导出到 %1$s</string>
     <string name="export_failed">导出失败</string>
 
     <string name="import_button">导入数据</string>
     <string name="import_success">已导入</string>
     <string name="import_failed">导入失败</string>
+    <string name="import_file_not_found">未找到文件。请将文件放到：%1$s</string>
     <string name="import_confirm_title">导入数据？</string>
     <string name="import_confirm_message">这将覆盖数据匹配的训练记录，且无法撤销。</string>
     <string name="import_confirm_ok">导入</string>

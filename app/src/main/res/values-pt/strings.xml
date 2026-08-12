@@ -44,12 +44,13 @@
 
     <string name="export_title">Dados</string>
     <string name="export_button">Exportar dados</string>
-    <string name="export_success">Exportado</string>
+    <string name="export_success">Exportado para %1$s</string>
     <string name="export_failed">Falha na exportação</string>
 
     <string name="import_button">Importar dados</string>
     <string name="import_success">Importado</string>
     <string name="import_failed">Falha na importação</string>
+    <string name="import_file_not_found">Nenhum arquivo encontrado. Coloque um arquivo em: %1$s</string>
     <string name="import_confirm_title">Importar dados?</string>
     <string name="import_confirm_message">Isso substituirá sessões com dados correspondentes. Não pode ser desfeito.</string>
     <string name="import_confirm_ok">Importar</string>

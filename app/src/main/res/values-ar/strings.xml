@@ -44,12 +44,13 @@
 
     <string name="export_title">البيانات</string>
     <string name="export_button">تصدير البيانات</string>
-    <string name="export_success">تم التصدير</string>
+    <string name="export_success">تم التصدير إلى %1$s</string>
     <string name="export_failed">فشل التصدير</string>
 
     <string name="import_button">استيراد البيانات</string>
     <string name="import_success">تم الاستيراد</string>
     <string name="import_failed">فشل الاستيراد</string>
+    <string name="import_file_not_found">لم يتم العثور على ملف. ضع ملفًا في: %1$s</string>
     <string name="import_confirm_title">استيراد البيانات؟</string>
     <string name="import_confirm_message">سيؤدي هذا إلى الكتابة فوق الجلسات ذات البيانات المطابقة. لا يمكن التراجع عن هذا.</string>
     <string name="import_confirm_ok">استيراد</string>

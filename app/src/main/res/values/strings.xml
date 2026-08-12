@@ -45,12 +45,13 @@
 
     <string name="export_title">Data</string>
     <string name="export_button">Export data</string>
-    <string name="export_success">Exported</string>
+    <string name="export_success">Exported to %1$s</string>
     <string name="export_failed">Export failed</string>
 
     <string name="import_button">Import data</string>
     <string name="import_success">Imported</string>
     <string name="import_failed">Import failed</string>
+    <string name="import_file_not_found">No file found. Place a file at %1$s</string>
     <string name="import_confirm_title">Import data?</string>
     <string name="import_confirm_message">This will overwrite any sessions with matching data. This can\'t be undone.</string>
     <string name="import_confirm_ok">Import</string>
