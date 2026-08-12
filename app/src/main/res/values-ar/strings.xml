@@ -42,6 +42,11 @@
     <string name="btn_detail">تفاصيل</string>
     <string name="shots_empty">لا توجد بيانات</string>
 
+    <string name="export_title">البيانات</string>
+    <string name="export_button">تصدير البيانات</string>
+    <string name="export_success">تم التصدير</string>
+    <string name="export_failed">فشل التصدير</string>
+
     <string name="aod_prompt_title">Always On Display</string>
     <string name="aod_prompt_message">ستبقى الشاشة مضاءة بشكل خافت أثناء الجلسة. فعّل خاصية Always On Display في إعدادات الساعة لعمر بطارية أفضل.</string>
     <string name="aod_prompt_open_settings">فتح الإعدادات</string>

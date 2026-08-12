@@ -42,6 +42,11 @@
     <string name="btn_detail">詳細</string>
     <string name="shots_empty">データなし</string>
 
+    <string name="export_title">データ</string>
+    <string name="export_button">データをエクスポート</string>
+    <string name="export_success">エクスポートしました</string>
+    <string name="export_failed">エクスポートに失敗しました</string>
+
     <string name="aod_prompt_title">Always On Display</string>
     <string name="aod_prompt_message">トレーニング中は画面が暗いまま点灯し続けます。バッテリーをより長持ちさせるには、時計の設定でAlways On Displayを有効にしてください。</string>
     <string name="aod_prompt_open_settings">設定を開く</string>

@@ -42,6 +42,11 @@
     <string name="btn_detail">Detalles</string>
     <string name="shots_empty">Sin datos</string>
 
+    <string name="export_title">Datos</string>
+    <string name="export_button">Exportar datos</string>
+    <string name="export_success">Exportado</string>
+    <string name="export_failed">Error al exportar</string>
+
     <string name="aod_prompt_title">Always On Display</string>
     <string name="aod_prompt_message">La pantalla permanecerá encendida atenuada durante una sesión. Activa Always On Display en los ajustes del reloj para una mejor duración de batería.</string>
     <string name="aod_prompt_open_settings">Abrir ajustes</string>

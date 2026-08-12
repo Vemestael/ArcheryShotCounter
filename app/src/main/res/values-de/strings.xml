@@ -42,6 +42,11 @@
     <string name="btn_detail">Details</string>
     <string name="shots_empty">Keine Daten</string>
 
+    <string name="export_title">Daten</string>
+    <string name="export_button">Daten exportieren</string>
+    <string name="export_success">Exportiert</string>
+    <string name="export_failed">Export fehlgeschlagen</string>
+
     <string name="aod_prompt_title">Always On Display</string>
     <string name="aod_prompt_message">Der Bildschirm bleibt während einer Sitzung gedimmt eingeschaltet. Aktiviere Always On Display in den Uhreinstellungen für eine bessere Akkulaufzeit.</string>
     <string name="aod_prompt_open_settings">Einstellungen öffnen</string>

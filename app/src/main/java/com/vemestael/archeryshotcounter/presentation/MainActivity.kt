@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
 import android.hardware.SensorManager
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.CountDownTimer
@@ -16,6 +17,7 @@ import android.provider.Settings
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -33,7 +35,10 @@ import androidx.wear.compose.foundation.pager.HorizontalPager
 import androidx.wear.compose.foundation.pager.rememberPagerState
 import androidx.wear.compose.material3.AppScaffold
 import androidx.wear.compose.material3.HorizontalPageIndicator
+import com.vemestael.archeryshotcounter.R
 import com.vemestael.archeryshotcounter.presentation.theme.ArcheryShotCounterTheme
+import java.text.SimpleDateFormat
+import java.util.Date
 import java.util.Locale
 import java.util.concurrent.Executors
 
@@ -99,6 +104,13 @@ class MainActivity : ComponentActivity() {
         }
     }
     private val ambientObserver = AmbientLifecycleObserver(this, ambientCallback)
+
+    private var exportStatus by mutableStateOf<String?>(null)
+    private val exportStatusHandler = Handler(Looper.getMainLooper())
+    private val exportStatusHideRunnable = Runnable { exportStatus = null }
+    private val exportLauncher = registerForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
+        if (uri != null) exportData(uri)
+    }
 
     private var ambientAvailability = AmbientAvailability.UNKNOWN
     private var showAodPrompt by mutableStateOf(false)
@@ -203,6 +215,8 @@ class MainActivity : ComponentActivity() {
                     autoPauseDuration = autoPauseDuration,
                     autoPauseSecondsLeft = autoPauseSecondsLeft,
                     lastShotMagnitude = lastShotMagnitude,
+                    exportStatus = exportStatus,
+                    onExportData = ::startExport,
                     showAodPrompt = showAodPrompt,
                     onOpenDisplaySettings = { dismissAodPrompt(openSettings = true) },
                     onDismissAodPrompt = { dismissAodPrompt(openSettings = false) },
@@ -467,6 +481,32 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    private fun startExport() {
+        val stamp = SimpleDateFormat("yyyy-MM-dd_HHmm", Locale.US).format(Date())
+        exportLauncher.launch("archery-export-$stamp.json")
+    }
+
+    private fun exportData(uri: Uri) {
+        dbExecutor.execute {
+            val success = try {
+                val allSessions = database.sessionDao().getAll()
+                val allShots = database.shotDao().getAll()
+                val json = buildExportJson(allSessions, allShots)
+                contentResolver.openOutputStream(uri)?.use { it.write(json.toByteArray()) }
+                true
+            } catch (e: Exception) {
+                false
+            }
+            runOnUiThread { showExportStatus(success) }
+        }
+    }
+
+    private fun showExportStatus(success: Boolean) {
+        exportStatus = getString(if (success) R.string.export_success else R.string.export_failed)
+        exportStatusHandler.removeCallbacks(exportStatusHideRunnable)
+        exportStatusHandler.postDelayed(exportStatusHideRunnable, 3000)
+    }
+
     private fun clearPendingSession() {
         getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit {
             remove(KEY_PENDING_ID)
@@ -506,6 +546,7 @@ class MainActivity : ComponentActivity() {
         super.onDestroy()
         cancelAutoPause()
         magnitudeHandler.removeCallbacks(magnitudeHideRunnable)
+        exportStatusHandler.removeCallbacks(exportStatusHideRunnable)
         shotDetector.stop()
         dbExecutor.shutdown()
     }
@@ -527,6 +568,8 @@ fun ArcheryApp(
     autoPauseDuration: Int,
     autoPauseSecondsLeft: Int,
     lastShotMagnitude: Float?,
+    exportStatus: String?,
+    onExportData: () -> Unit,
     showAodPrompt: Boolean,
     onOpenDisplaySettings: () -> Unit,
     onDismissAodPrompt: () -> Unit,
@@ -597,7 +640,9 @@ fun ArcheryApp(
                         onShotCooldownChange = onShotCooldownChange,
                         onShotsPerEndChange = onShotsPerEndChange,
                         onAutoPauseEnabledChange = onAutoPauseEnabledChange,
-                        onAutoPauseDurationChange = onAutoPauseDurationChange
+                        onAutoPauseDurationChange = onAutoPauseDurationChange,
+                        exportStatus = exportStatus,
+                        onExportData = onExportData
                     )
                 }
             }

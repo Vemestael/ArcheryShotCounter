@@ -34,6 +34,9 @@ interface ShotDao {
     @Query("SELECT * FROM shots WHERE sessionId = :sessionId ORDER BY timestamp DESC")
     fun getBySession(sessionId: Long): List<Shot>
 
+    @Query("SELECT * FROM shots ORDER BY sessionId, timestamp")
+    fun getAll(): List<Shot>
+
     @Query("DELETE FROM shots WHERE id IN (SELECT id FROM shots WHERE sessionId = :sessionId ORDER BY timestamp DESC LIMIT :count)")
     fun deleteLatest(sessionId: Long, count: Int)
 }

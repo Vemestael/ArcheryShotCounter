@@ -42,6 +42,11 @@
     <string name="btn_detail">Detaylar</string>
     <string name="shots_empty">Veri yok</string>
 
+    <string name="export_title">Veri</string>
+    <string name="export_button">Verileri dışa aktar</string>
+    <string name="export_success">Dışa aktarıldı</string>
+    <string name="export_failed">Dışa aktarma başarısız</string>
+
     <string name="aod_prompt_title">Always On Display</string>
     <string name="aod_prompt_message">Antrenman sırasında ekran sönük şekilde açık kalır. Daha iyi pil ömrü için saat ayarlarından Always On Display\'i etkinleştir.</string>
     <string name="aod_prompt_open_settings">Ayarları aç</string>

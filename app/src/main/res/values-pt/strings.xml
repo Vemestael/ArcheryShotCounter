@@ -42,6 +42,11 @@
     <string name="btn_detail">Detalhes</string>
     <string name="shots_empty">Sem dados</string>
 
+    <string name="export_title">Dados</string>
+    <string name="export_button">Exportar dados</string>
+    <string name="export_success">Exportado</string>
+    <string name="export_failed">Falha na exportação</string>
+
     <string name="aod_prompt_title">Always On Display</string>
     <string name="aod_prompt_message">A tela permanecerá acesa e escurecida durante uma sessão. Ative o Always On Display nas configurações do relógio para melhor duração da bateria.</string>
     <string name="aod_prompt_open_settings">Abrir configurações</string>

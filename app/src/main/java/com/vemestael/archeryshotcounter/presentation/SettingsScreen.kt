@@ -57,13 +57,15 @@ fun SettingsScreen(
     shotsPerEnd: Int,
     autoPauseEnabled: Boolean,
     autoPauseDuration: Int,
+    exportStatus: String?,
     onSensitivityChange: (Sensitivity) -> Unit,
     onCustomThresholdChange: (Int) -> Unit,
     onShowLanguagePicker: () -> Unit,
     onShotCooldownChange: (Int) -> Unit,
     onShotsPerEndChange: (Int) -> Unit,
     onAutoPauseEnabledChange: (Boolean) -> Unit,
-    onAutoPauseDurationChange: (Int) -> Unit
+    onAutoPauseDurationChange: (Int) -> Unit,
+    onExportData: () -> Unit
 ) {
     val listState = rememberTransformingLazyColumnState()
     val transformationSpec = rememberTransformationSpec()
@@ -339,6 +341,51 @@ fun SettingsScreen(
                     )
                 ) {
                     Text(currentLabel, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+                }
+            }
+
+            item {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 12.dp, bottom = 4.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = stringResource(R.string.export_title),
+                        style = MaterialTheme.typography.titleSmall,
+                        color = Color(0xFFCCCCCC)
+                    )
+                }
+            }
+
+            item {
+                Button(
+                    onClick = onExportData,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .transformedHeight(this, transformationSpec),
+                    transformation = SurfaceTransformation(transformationSpec),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF3A3A3A),
+                        contentColor = Color(0xFFCCCCCC)
+                    )
+                ) {
+                    Text(stringResource(R.string.export_button), textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+                }
+            }
+
+            if (exportStatus != null) {
+                item {
+                    Text(
+                        text = exportStatus,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 4.dp),
+                        textAlign = TextAlign.Center,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Color(0xFF9E9E9E)
+                    )
                 }
             }
 

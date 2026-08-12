@@ -42,6 +42,11 @@
     <string name="btn_detail">Детальнее</string>
     <string name="shots_empty">Нет данных</string>
 
+    <string name="export_title">Данные</string>
+    <string name="export_button">Экспортировать данные</string>
+    <string name="export_success">Экспортировано</string>
+    <string name="export_failed">Ошибка экспорта</string>
+
     <string name="aod_prompt_title">Always On Display</string>
     <string name="aod_prompt_message">Во время тренировки экран будет оставаться включённым в приглушённом режиме. Включи Always On Display в настройках часов для лучшей автономности.</string>
     <string name="aod_prompt_open_settings">Открыть настройки</string>

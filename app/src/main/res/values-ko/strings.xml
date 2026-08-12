@@ -42,6 +42,11 @@
     <string name="btn_detail">상세</string>
     <string name="shots_empty">데이터 없음</string>
 
+    <string name="export_title">데이터</string>
+    <string name="export_button">데이터 내보내기</string>
+    <string name="export_success">내보내기 완료</string>
+    <string name="export_failed">내보내기 실패</string>
+
     <string name="aod_prompt_title">Always On Display</string>
     <string name="aod_prompt_message">세션 중에는 화면이 어둡게 켜진 상태로 유지됩니다. 배터리 수명을 늘리려면 시계 설정에서 Always On Display를 켜세요.</string>
     <string name="aod_prompt_open_settings">설정 열기</string>
