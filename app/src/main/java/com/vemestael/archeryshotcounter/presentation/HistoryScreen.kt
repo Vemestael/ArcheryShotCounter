@@ -244,6 +244,7 @@ private fun EditSessionDialog(
     onDismiss: () -> Unit
 ) {
     var count by remember { mutableIntStateOf(session.shotCount) }
+    var shotsPerEnd by remember { mutableIntStateOf(session.shotsPerEndAtStart) }
     val locale = LocalConfiguration.current.locales[0]
     val dateFormat = remember(locale) { SimpleDateFormat("d MMM", locale) }
     val dateText = remember(session, locale) { dateFormat.format(Date(session.startTime)) }
@@ -304,8 +305,43 @@ private fun EditSessionDialog(
                     Text("+", fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
                 }
             }
+            Text(
+                text = stringResource(R.string.series_title),
+                style = MaterialTheme.typography.labelSmall,
+                color = Color(0xFFCCCCCC)
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Button(
+                    onClick = { if (shotsPerEnd > 0) shotsPerEnd-- },
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF3A3A3A),
+                        contentColor = Color(0xFFCCCCCC)
+                    )
+                ) {
+                    Text("−", fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+                }
+                Text(
+                    text = if (shotsPerEnd == 0) stringResource(R.string.series_off) else "$shotsPerEnd",
+                    modifier = Modifier.weight(1f),
+                    textAlign = TextAlign.Center,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Button(
+                    onClick = { if (shotsPerEnd < 99) shotsPerEnd++ },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text("+", fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+                }
+            }
             Button(
-                onClick = { onSave(session.copy(shotCount = count)) },
+                onClick = { onSave(session.copy(shotCount = count, shotsPerEndAtStart = shotsPerEnd)) },
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(stringResource(R.string.dialog_save), textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())

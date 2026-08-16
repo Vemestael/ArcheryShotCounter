@@ -31,6 +31,17 @@ class DataExportTest {
     }
 
     @Test
+    fun `shotsPerEndAtStart round-trips and defaults to 0 for legacy exports`() {
+        val session = Session(id = 5L, startTime = 5L, lastShotTime = 5L, shotCount = 0, shotsPerEndAtStart = 3)
+        val imported = parseImportJson(buildExportJson(listOf(session), emptyList()))
+        assertEquals(3, imported[0].session.shotsPerEndAtStart)
+
+        val legacyJson = """{"exportedAt":1,"sessions":[{"id":6,"startTime":6,"lastShotTime":6,"shotCount":0,"shots":[]}]}"""
+        val legacyImported = parseImportJson(legacyJson)
+        assertEquals(0, legacyImported[0].session.shotsPerEndAtStart)
+    }
+
+    @Test
     fun `export with no sessions produces an empty but valid import`() {
         val json = buildExportJson(emptyList(), emptyList())
         val imported = parseImportJson(json)

@@ -22,6 +22,7 @@ fun buildExportJson(sessions: List<Session>, shots: List<Shot>): String {
                 put("startTime", session.startTime)
                 put("lastShotTime", session.lastShotTime)
                 put("shotCount", session.shotCount)
+                put("shotsPerEndAtStart", session.shotsPerEndAtStart)
                 put("shots", shotsArray)
             }
         )
@@ -42,7 +43,8 @@ fun parseImportJson(json: String): List<ImportedSession> {
             id = sessionObj.getLong("id"),
             startTime = sessionObj.getLong("startTime"),
             lastShotTime = sessionObj.getLong("lastShotTime"),
-            shotCount = sessionObj.getInt("shotCount")
+            shotCount = sessionObj.getInt("shotCount"),
+            shotsPerEndAtStart = sessionObj.optInt("shotsPerEndAtStart", 0)
         )
         val shotsArray = sessionObj.getJSONArray("shots")
         val shots = List(shotsArray.length()) { j ->

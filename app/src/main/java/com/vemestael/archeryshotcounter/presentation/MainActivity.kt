@@ -364,7 +364,7 @@ class MainActivity : ComponentActivity() {
         when {
             currentSession == null -> {
                 val now = System.currentTimeMillis()
-                val session = Session(id = now, startTime = now, lastShotTime = now, shotCount = shotCount)
+                val session = Session(id = now, startTime = now, lastShotTime = now, shotCount = shotCount, shotsPerEndAtStart = shotsPerEnd)
                 currentSession = session
                 if (shotCount > 0) sessions.add(0, session)
                 dbExecutor.execute { database.sessionDao().insertOrUpdate(session) }
@@ -437,7 +437,7 @@ class MainActivity : ComponentActivity() {
         val now = System.currentTimeMillis()
         if (actualDelta > 0) {
             if (currentSession == null) {
-                val session = Session(id = now, startTime = now, lastShotTime = now, shotCount = newCount)
+                val session = Session(id = now, startTime = now, lastShotTime = now, shotCount = newCount, shotsPerEndAtStart = shotsPerEnd)
                 currentSession = session
                 sessions.add(0, session)
                 dbExecutor.execute {

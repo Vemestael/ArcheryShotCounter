@@ -54,7 +54,13 @@ private val MIGRATION_1_2 = object : Migration(1, 2) {
     }
 }
 
-@Database(entities = [Session::class, Shot::class], version = 2, exportSchema = false)
+private val MIGRATION_2_3 = object : Migration(2, 3) {
+    override fun migrate(database: SupportSQLiteDatabase) {
+        database.execSQL("ALTER TABLE `sessions` ADD COLUMN `shotsPerEndAtStart` INTEGER NOT NULL DEFAULT 0")
+    }
+}
+
+@Database(entities = [Session::class, Shot::class], version = 3, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun sessionDao(): SessionDao
     abstract fun shotDao(): ShotDao
@@ -68,7 +74,7 @@ abstract class AppDatabase : RoomDatabase() {
                     context.applicationContext,
                     AppDatabase::class.java,
                     "archery.db"
-                ).addMigrations(MIGRATION_1_2)
+                ).addMigrations(MIGRATION_1_2, MIGRATION_2_3)
                     .setJournalMode(JournalMode.TRUNCATE)
                     .build().also { instance = it }
             }
