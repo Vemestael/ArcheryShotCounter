@@ -3,29 +3,34 @@ package com.vemestael.archeryshotcounter.presentation
 import org.json.JSONArray
 import org.json.JSONObject
 
+fun sessionJson(session: Session, shots: List<Shot>): JSONObject {
+    val shotsArray = JSONArray()
+    shots.sortedBy { it.timestamp }.forEach { shot ->
+        shotsArray.put(
+            JSONObject().apply {
+                put("timestamp", shot.timestamp)
+                put("magnitude", shot.magnitude?.toDouble() ?: JSONObject.NULL)
+            }
+        )
+    }
+    return JSONObject().apply {
+        put("id", session.id)
+        put("startTime", session.startTime)
+        put("lastShotTime", session.lastShotTime)
+        put("shotCount", session.shotCount)
+        put("shotsPerEndAtStart", session.shotsPerEndAtStart)
+        put("shots", shotsArray)
+    }
+}
+
+/** Same per-session shape as one element of buildExportJson's array — used for the phone Data Layer sync. */
+fun buildSessionJson(session: Session, shots: List<Shot>): String = sessionJson(session, shots).toString()
+
 fun buildExportJson(sessions: List<Session>, shots: List<Shot>): String {
     val shotsBySession = shots.groupBy { it.sessionId }
     val sessionsArray = JSONArray()
     sessions.sortedByDescending { it.startTime }.forEach { session ->
-        val shotsArray = JSONArray()
-        shotsBySession[session.id].orEmpty().sortedBy { it.timestamp }.forEach { shot ->
-            shotsArray.put(
-                JSONObject().apply {
-                    put("timestamp", shot.timestamp)
-                    put("magnitude", shot.magnitude?.toDouble() ?: JSONObject.NULL)
-                }
-            )
-        }
-        sessionsArray.put(
-            JSONObject().apply {
-                put("id", session.id)
-                put("startTime", session.startTime)
-                put("lastShotTime", session.lastShotTime)
-                put("shotCount", session.shotCount)
-                put("shotsPerEndAtStart", session.shotsPerEndAtStart)
-                put("shots", shotsArray)
-            }
-        )
+        sessionsArray.put(sessionJson(session, shotsBySession[session.id].orEmpty()))
     }
     return JSONObject().apply {
         put("exportedAt", System.currentTimeMillis())

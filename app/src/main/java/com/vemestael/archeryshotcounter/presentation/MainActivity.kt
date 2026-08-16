@@ -33,6 +33,8 @@ import androidx.wear.compose.foundation.pager.HorizontalPager
 import androidx.wear.compose.foundation.pager.rememberPagerState
 import androidx.wear.compose.material3.AppScaffold
 import androidx.wear.compose.material3.HorizontalPageIndicator
+import com.google.android.gms.wearable.PutDataMapRequest
+import com.google.android.gms.wearable.Wearable
 import com.vemestael.archeryshotcounter.R
 import com.vemestael.archeryshotcounter.presentation.theme.ArcheryShotCounterTheme
 import java.io.File
@@ -395,6 +397,15 @@ class MainActivity : ComponentActivity() {
         clearScreenPowerMode()
     }
 
+    /** Pushes a DataItem to the phone companion app. Call from a background thread. */
+    private fun syncSessionToPhone(session: Session, shots: List<Shot>) {
+        val request = PutDataMapRequest.create("/session/${session.id}").apply {
+            dataMap.putString("json", buildSessionJson(session, shots))
+            dataMap.putLong("syncedAt", System.currentTimeMillis())
+        }.asPutDataRequest().setUrgent()
+        Wearable.getDataClient(this).putDataItem(request)
+    }
+
     private fun endSession() {
         cancelAutoPause()
         if (isDetecting) stopDetection()
@@ -403,7 +414,10 @@ class MainActivity : ComponentActivity() {
             val updated = session.copy(lastShotTime = System.currentTimeMillis(), shotCount = shotCount)
             val idx = sessions.indexOfFirst { it.id == updated.id }
             if (idx >= 0) sessions[idx] = updated else sessions.add(0, updated)
-            dbExecutor.execute { database.sessionDao().insertOrUpdate(updated) }
+            dbExecutor.execute {
+                database.sessionDao().insertOrUpdate(updated)
+                syncSessionToPhone(updated, database.shotDao().getBySession(updated.id))
+            }
         } else {
             sessions.removeIf { it.id == session.id }
             dbExecutor.execute { database.sessionDao().delete(session) }
@@ -474,7 +488,10 @@ class MainActivity : ComponentActivity() {
         val idx = sessions.indexOfFirst { it.id == updated.id }
         if (idx >= 0) {
             sessions[idx] = updated
-            dbExecutor.execute { database.sessionDao().insertOrUpdate(updated) }
+            dbExecutor.execute {
+                database.sessionDao().insertOrUpdate(updated)
+                syncSessionToPhone(updated, database.shotDao().getBySession(updated.id))
+            }
         }
         if (currentSession?.id == updated.id) {
             currentSession = updated
@@ -545,6 +562,7 @@ class MainActivity : ComponentActivity() {
                     database.sessionDao().insertOrUpdate(session)
                     database.shotDao().deleteAllForSession(session.id)
                     shots.forEach { database.shotDao().insert(it) }
+                    syncSessionToPhone(session, shots)
                 }
                 true
             } catch (e: Exception) {
