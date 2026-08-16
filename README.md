@@ -11,9 +11,10 @@ repositories and the overall picture of where things stand.
 - **[ArcheryShotCounter-wearos](https://github.com/Vemestael/ArcheryShotCounter-wearos)** — the Wear
   OS app. Detects shots from the wrist accelerometer's recoil spike, no buttons needed during
   shooting. Published, currently at v1.4.
-- **ArcheryShotCounter-android** — the phone companion app. Not started yet; will sync session
-  data from the watch (Wearable Data Layer API) and eventually add data visualization and
-  bow-mounted sensor integration.
+- **[ArcheryShotCounter-android](https://github.com/Vemestael/ArcheryShotCounter-android)** —
+  the phone companion app. Two-way syncs sessions with the watch (Wearable Data Layer API),
+  editable history, JSON/CSV export-import. Data visualization and bow-mounted sensor support
+  are planned next.
 
 ## Who it's for
 
@@ -26,7 +27,8 @@ repositories and the overall picture of where things stand.
 ## Status
 
 - Wear OS app: feature-complete for solo use, in Google Play publication prep (closed testing).
-- Android companion app: architecture/scaffolding stage.
+- Android companion app: core sync + history + editing + export/import working, in field
+  testing with a second user before wider release.
 
 ## License
 
