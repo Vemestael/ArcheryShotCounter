@@ -107,6 +107,7 @@ class MainActivity : ComponentActivity() {
     private var phoneSyncStatus by mutableStateOf<String?>(null)
     private val phoneSyncStatusHandler = Handler(Looper.getMainLooper())
     private val phoneSyncStatusHideRunnable = Runnable { phoneSyncStatus = null }
+    private var showClearDataConfirm by mutableStateOf(false)
 
     private var ambientAvailability = AmbientAvailability.UNKNOWN
     private var showAodPrompt by mutableStateOf(false)
@@ -213,6 +214,10 @@ class MainActivity : ComponentActivity() {
                     lastShotMagnitude = lastShotMagnitude,
                     phoneSyncStatus = phoneSyncStatus,
                     onSyncData = ::syncData,
+                    showClearDataConfirm = showClearDataConfirm,
+                    onClearData = ::startClearData,
+                    onConfirmClearData = ::confirmClearData,
+                    onCancelClearData = ::cancelClearData,
                     showAodPrompt = showAodPrompt,
                     onOpenDisplaySettings = { dismissAodPrompt(openSettings = true) },
                     onDismissAodPrompt = { dismissAodPrompt(openSettings = false) },
@@ -426,6 +431,35 @@ class MainActivity : ComponentActivity() {
             }
     }
 
+    private fun startClearData() {
+        showClearDataConfirm = true
+    }
+
+    private fun cancelClearData() {
+        showClearDataConfirm = false
+    }
+
+    /** Local wipe only — deliberately does not push a tombstone for every session, since that
+     * would delete everything on the phone too on next sync. Sync afterwards to restore from
+     * the phone if it still has the data. */
+    private fun confirmClearData() {
+        showClearDataConfirm = false
+        cancelAutoPause()
+        if (isDetecting) stopDetection()
+        currentSession = null
+        shotCount = 0
+        clearPendingSession()
+        sessions.clear()
+        dbExecutor.execute {
+            database.clearAllLocalData()
+            runOnUiThread {
+                phoneSyncStatus = getString(R.string.clear_data_success)
+                phoneSyncStatusHandler.removeCallbacks(phoneSyncStatusHideRunnable)
+                phoneSyncStatusHandler.postDelayed(phoneSyncStatusHideRunnable, 3000)
+            }
+        }
+    }
+
     private fun endSession() {
         cancelAutoPause()
         if (isDetecting) stopDetection()
@@ -603,6 +637,10 @@ fun ArcheryApp(
     lastShotMagnitude: Float?,
     phoneSyncStatus: String?,
     onSyncData: () -> Unit,
+    showClearDataConfirm: Boolean,
+    onClearData: () -> Unit,
+    onConfirmClearData: () -> Unit,
+    onCancelClearData: () -> Unit,
     showAodPrompt: Boolean,
     onOpenDisplaySettings: () -> Unit,
     onDismissAodPrompt: () -> Unit,
@@ -675,7 +713,8 @@ fun ArcheryApp(
                         onAutoPauseEnabledChange = onAutoPauseEnabledChange,
                         onAutoPauseDurationChange = onAutoPauseDurationChange,
                         phoneSyncStatus = phoneSyncStatus,
-                        onSyncData = onSyncData
+                        onSyncData = onSyncData,
+                        onClearData = onClearData
                     )
                 }
             }
@@ -704,6 +743,12 @@ fun ArcheryApp(
                 AodPromptDialog(
                     onOpenSettings = onOpenDisplaySettings,
                     onDismiss = onDismissAodPrompt
+                )
+            }
+            if (showClearDataConfirm) {
+                ClearDataConfirmDialog(
+                    onConfirm = onConfirmClearData,
+                    onCancel = onCancelClearData
                 )
             }
         }

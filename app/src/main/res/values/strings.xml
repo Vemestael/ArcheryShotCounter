@@ -60,6 +60,13 @@
     <string name="phone_sync_button">Sync data</string>
     <string name="phone_sync_success">Synced, %1$d sessions total</string>
 
+    <string name="clear_data_button">Clear data</string>
+    <string name="clear_data_confirm_title">Clear all data?</string>
+    <string name="clear_data_confirm_message">Deletes every session and shot stored on this watch. This does not affect the phone — sync afterwards to restore from there. This can\'t be undone.</string>
+    <string name="clear_data_confirm_ok">Clear</string>
+    <string name="clear_data_confirm_cancel">Cancel</string>
+    <string name="clear_data_success">Cleared</string>
+
     <string name="aod_prompt_title">Always On Display</string>
     <string name="aod_prompt_message">The screen will stay on dimmed during a session. Enable Always On Display in watch settings for better battery life.</string>
     <string name="aod_prompt_open_settings">Open settings</string>

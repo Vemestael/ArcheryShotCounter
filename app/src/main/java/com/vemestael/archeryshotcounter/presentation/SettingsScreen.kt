@@ -65,7 +65,8 @@ fun SettingsScreen(
     onShotsPerEndChange: (Int) -> Unit,
     onAutoPauseEnabledChange: (Boolean) -> Unit,
     onAutoPauseDurationChange: (Int) -> Unit,
-    onSyncData: () -> Unit
+    onSyncData: () -> Unit,
+    onClearData: () -> Unit
 ) {
     val listState = rememberTransformingLazyColumnState()
     val transformationSpec = rememberTransformationSpec()
@@ -386,6 +387,23 @@ fun SettingsScreen(
                         style = MaterialTheme.typography.labelSmall,
                         color = Color(0xFF9E9E9E)
                     )
+                }
+            }
+
+            item {
+                Button(
+                    onClick = onClearData,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 4.dp)
+                        .transformedHeight(this, transformationSpec),
+                    transformation = SurfaceTransformation(transformationSpec),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error,
+                        contentColor = MaterialTheme.colorScheme.onError
+                    )
+                ) {
+                    Text(stringResource(R.string.clear_data_button), textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
                 }
             }
 
