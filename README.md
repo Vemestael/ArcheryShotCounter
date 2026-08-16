@@ -28,7 +28,7 @@ A WearOS app for archers that automatically counts shots using the wrist acceler
 
 ## Installation
 
-Download the latest APK from the [Releases](https://github.com/Vemestael/ArcheryShotCounter/releases) page and sideload it to your watch via Wi-Fi ADB.
+Download the latest APK from the [Releases](https://github.com/Vemestael/ArcheryShotCounter-wearos/releases) page and sideload it to your watch via Wi-Fi ADB.
 
 ### 1. Prepare the watch
 
@@ -76,7 +76,7 @@ adb push archery-export-<timestamp>.json /storage/emulated/0/Android/data/com.ve
 ## Building from source
 
 ```bash
-git clone https://github.com/Vemestael/ArcheryShotCounter.git
+git clone https://github.com/Vemestael/ArcheryShotCounter-wearos.git
 cd ArcheryShotCounter
 ./gradlew assembleDebug
 ```

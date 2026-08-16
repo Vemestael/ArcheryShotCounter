@@ -6,7 +6,7 @@ Copy-paste source for Play Console → App content → Data safety.
 **No.**
 
 The app has no `INTERNET` permission and makes no network requests — verifiable in the
-manifest and the public source at github.com/Vemestael/ArcheryShotCounter. All session/shot
+manifest and the public source at github.com/Vemestael/ArcheryShotCounter-wearos. All session/shot
 data is stored in a local database on the device only. Play's Data Safety definition of
 "collection" is about data transmitted off the device — local-only storage doesn't count,
 so "No data collected" is the accurate answer here, not a simplification.

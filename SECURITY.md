@@ -15,4 +15,4 @@ project, so response times may vary, but reports are taken seriously.
 ## Supported versions
 
 Only the latest release on the
-[Releases page](https://github.com/Vemestael/ArcheryShotCounter/releases) is supported.
+[Releases page](https://github.com/Vemestael/ArcheryShotCounter-wearos/releases) is supported.

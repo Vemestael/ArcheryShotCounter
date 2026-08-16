@@ -40,7 +40,7 @@ Suggest: Health & Fitness (or Sports, depending on what's available at listing t
 
 ### Contact details
 - Email: vemestael@gmail.com
-- Privacy policy: https://vemestael.github.io/ArcheryShotCounter/privacy-policy.html
+- Privacy policy: https://vemestael.github.io/ArcheryShotCounter-wearos/privacy-policy.html
   (requires GitHub Pages enabled on the repo: Settings → Pages → Source: Deploy from branch → main → /docs)
 
 ### Screenshots
