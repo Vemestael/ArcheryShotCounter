@@ -121,6 +121,10 @@ class MainActivity : ComponentActivity() {
     private val importStatusHideRunnable = Runnable { importStatus = null }
     private var showImportConfirm by mutableStateOf(false)
 
+    private var phoneSyncStatus by mutableStateOf<String?>(null)
+    private val phoneSyncStatusHandler = Handler(Looper.getMainLooper())
+    private val phoneSyncStatusHideRunnable = Runnable { phoneSyncStatus = null }
+
     private var ambientAvailability = AmbientAvailability.UNKNOWN
     private var showAodPrompt by mutableStateOf(false)
 
@@ -228,6 +232,8 @@ class MainActivity : ComponentActivity() {
                     onExportData = ::startExport,
                     importStatus = importStatus,
                     onImportData = ::startImport,
+                    phoneSyncStatus = phoneSyncStatus,
+                    onSyncAllToPhone = ::syncAllSessionsToPhone,
                     showImportConfirm = showImportConfirm,
                     onConfirmImport = ::confirmImport,
                     onCancelImport = ::cancelImport,
@@ -404,6 +410,22 @@ class MainActivity : ComponentActivity() {
             dataMap.putLong("syncedAt", System.currentTimeMillis())
         }.asPutDataRequest().setUrgent()
         Wearable.getDataClient(this).putDataItem(request)
+    }
+
+    /** One-time backfill: pushes every locally stored session, not just ones saved after sync existed. */
+    private fun syncAllSessionsToPhone() {
+        dbExecutor.execute {
+            val allSessions = database.sessionDao().getAll()
+            val shotsBySession = database.shotDao().getAll().groupBy { it.sessionId }
+            allSessions.forEach { session ->
+                syncSessionToPhone(session, shotsBySession[session.id].orEmpty())
+            }
+            runOnUiThread {
+                phoneSyncStatus = getString(R.string.phone_sync_success, allSessions.size)
+                phoneSyncStatusHandler.removeCallbacks(phoneSyncStatusHideRunnable)
+                phoneSyncStatusHandler.postDelayed(phoneSyncStatusHideRunnable, 6000)
+            }
+        }
     }
 
     private fun endSession() {
@@ -626,6 +648,7 @@ class MainActivity : ComponentActivity() {
         magnitudeHandler.removeCallbacks(magnitudeHideRunnable)
         exportStatusHandler.removeCallbacks(exportStatusHideRunnable)
         importStatusHandler.removeCallbacks(importStatusHideRunnable)
+        phoneSyncStatusHandler.removeCallbacks(phoneSyncStatusHideRunnable)
         shotDetector.stop()
         dbExecutor.shutdown()
     }
@@ -651,6 +674,8 @@ fun ArcheryApp(
     onExportData: () -> Unit,
     importStatus: String?,
     onImportData: () -> Unit,
+    phoneSyncStatus: String?,
+    onSyncAllToPhone: () -> Unit,
     showImportConfirm: Boolean,
     onConfirmImport: () -> Unit,
     onCancelImport: () -> Unit,
@@ -728,7 +753,9 @@ fun ArcheryApp(
                         exportStatus = exportStatus,
                         onExportData = onExportData,
                         importStatus = importStatus,
-                        onImportData = onImportData
+                        onImportData = onImportData,
+                        phoneSyncStatus = phoneSyncStatus,
+                        onSyncAllToPhone = onSyncAllToPhone
                     )
                 }
             }

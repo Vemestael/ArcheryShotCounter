@@ -59,6 +59,7 @@ fun SettingsScreen(
     autoPauseDuration: Int,
     exportStatus: String?,
     importStatus: String?,
+    phoneSyncStatus: String?,
     onSensitivityChange: (Sensitivity) -> Unit,
     onCustomThresholdChange: (Int) -> Unit,
     onShowLanguagePicker: () -> Unit,
@@ -67,7 +68,8 @@ fun SettingsScreen(
     onAutoPauseEnabledChange: (Boolean) -> Unit,
     onAutoPauseDurationChange: (Int) -> Unit,
     onExportData: () -> Unit,
-    onImportData: () -> Unit
+    onImportData: () -> Unit,
+    onSyncAllToPhone: () -> Unit
 ) {
     val listState = rememberTransformingLazyColumnState()
     val transformationSpec = rememberTransformationSpec()
@@ -412,6 +414,37 @@ fun SettingsScreen(
                 item {
                     Text(
                         text = importStatus,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 4.dp),
+                        textAlign = TextAlign.Center,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Color(0xFF9E9E9E)
+                    )
+                }
+            }
+
+            item {
+                Button(
+                    onClick = onSyncAllToPhone,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 4.dp)
+                        .transformedHeight(this, transformationSpec),
+                    transformation = SurfaceTransformation(transformationSpec),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF3A3A3A),
+                        contentColor = Color(0xFFCCCCCC)
+                    )
+                ) {
+                    Text(stringResource(R.string.phone_sync_button), textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+                }
+            }
+
+            if (phoneSyncStatus != null) {
+                item {
+                    Text(
+                        text = phoneSyncStatus,
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(top = 4.dp),

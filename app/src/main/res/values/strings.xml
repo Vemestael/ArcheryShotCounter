@@ -57,6 +57,9 @@
     <string name="import_confirm_ok">Import</string>
     <string name="import_confirm_cancel">Cancel</string>
 
+    <string name="phone_sync_button">Push all to phone</string>
+    <string name="phone_sync_success">Sent %1$d sessions to phone</string>
+
     <string name="aod_prompt_title">Always On Display</string>
     <string name="aod_prompt_message">The screen will stay on dimmed during a session. Enable Always On Display in watch settings for better battery life.</string>
     <string name="aod_prompt_open_settings">Open settings</string>
