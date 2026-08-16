@@ -57,8 +57,6 @@ fun SettingsScreen(
     shotsPerEnd: Int,
     autoPauseEnabled: Boolean,
     autoPauseDuration: Int,
-    exportStatus: String?,
-    importStatus: String?,
     phoneSyncStatus: String?,
     onSensitivityChange: (Sensitivity) -> Unit,
     onCustomThresholdChange: (Int) -> Unit,
@@ -67,9 +65,7 @@ fun SettingsScreen(
     onShotsPerEndChange: (Int) -> Unit,
     onAutoPauseEnabledChange: (Boolean) -> Unit,
     onAutoPauseDurationChange: (Int) -> Unit,
-    onExportData: () -> Unit,
-    onImportData: () -> Unit,
-    onSyncAllToPhone: () -> Unit
+    onSyncData: () -> Unit
 ) {
     val listState = rememberTransformingLazyColumnState()
     val transformationSpec = rememberTransformationSpec()
@@ -365,71 +361,9 @@ fun SettingsScreen(
 
             item {
                 Button(
-                    onClick = onExportData,
+                    onClick = onSyncData,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .transformedHeight(this, transformationSpec),
-                    transformation = SurfaceTransformation(transformationSpec),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF3A3A3A),
-                        contentColor = Color(0xFFCCCCCC)
-                    )
-                ) {
-                    Text(stringResource(R.string.export_button), textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
-                }
-            }
-
-            if (exportStatus != null) {
-                item {
-                    Text(
-                        text = exportStatus,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 4.dp),
-                        textAlign = TextAlign.Center,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = Color(0xFF9E9E9E)
-                    )
-                }
-            }
-
-            item {
-                Button(
-                    onClick = onImportData,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 4.dp)
-                        .transformedHeight(this, transformationSpec),
-                    transformation = SurfaceTransformation(transformationSpec),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF3A3A3A),
-                        contentColor = Color(0xFFCCCCCC)
-                    )
-                ) {
-                    Text(stringResource(R.string.import_button), textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
-                }
-            }
-
-            if (importStatus != null) {
-                item {
-                    Text(
-                        text = importStatus,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 4.dp),
-                        textAlign = TextAlign.Center,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = Color(0xFF9E9E9E)
-                    )
-                }
-            }
-
-            item {
-                Button(
-                    onClick = onSyncAllToPhone,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 4.dp)
                         .transformedHeight(this, transformationSpec),
                     transformation = SurfaceTransformation(transformationSpec),
                     colors = ButtonDefaults.buttonColors(

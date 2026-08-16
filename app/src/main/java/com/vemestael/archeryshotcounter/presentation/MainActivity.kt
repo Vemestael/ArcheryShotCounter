@@ -33,14 +33,11 @@ import androidx.wear.compose.foundation.pager.HorizontalPager
 import androidx.wear.compose.foundation.pager.rememberPagerState
 import androidx.wear.compose.material3.AppScaffold
 import androidx.wear.compose.material3.HorizontalPageIndicator
+import com.google.android.gms.wearable.DataMapItem
 import com.google.android.gms.wearable.PutDataMapRequest
 import com.google.android.gms.wearable.Wearable
 import com.vemestael.archeryshotcounter.R
 import com.vemestael.archeryshotcounter.presentation.theme.ArcheryShotCounterTheme
-import java.io.File
-import java.io.IOException
-import java.text.SimpleDateFormat
-import java.util.Date
 import java.util.Locale
 import java.util.concurrent.Executors
 
@@ -58,7 +55,6 @@ private const val KEY_AUTO_PAUSE_ENABLED = "auto_pause_enabled"
 private const val KEY_AUTO_PAUSE_DURATION = "auto_pause_duration"
 private const val KEY_AOD_PROMPT_DISMISSED = "aod_prompt_dismissed"
 private const val DIM_SCREEN_BRIGHTNESS = 0.08f
-private const val IMPORT_FILENAME = "archery-import.json"
 
 /**
  * Whether the system's Always On Display / ambient mode is available to fall back on.
@@ -107,19 +103,6 @@ class MainActivity : ComponentActivity() {
         }
     }
     private val ambientObserver = AmbientLifecycleObserver(this, ambientCallback)
-
-    // Wear OS has no Storage Access Framework file picker on this hardware (both
-    // ACTION_CREATE_DOCUMENT and ACTION_OPEN_DOCUMENT resolve to a non-functional system stub),
-    // so export/import use a fixed path under getExternalFilesDir() instead of a picker — no
-    // permission needed, and reachable without root via `adb pull`/`adb push`.
-    private var exportStatus by mutableStateOf<String?>(null)
-    private val exportStatusHandler = Handler(Looper.getMainLooper())
-    private val exportStatusHideRunnable = Runnable { exportStatus = null }
-
-    private var importStatus by mutableStateOf<String?>(null)
-    private val importStatusHandler = Handler(Looper.getMainLooper())
-    private val importStatusHideRunnable = Runnable { importStatus = null }
-    private var showImportConfirm by mutableStateOf(false)
 
     private var phoneSyncStatus by mutableStateOf<String?>(null)
     private val phoneSyncStatusHandler = Handler(Looper.getMainLooper())
@@ -228,15 +211,8 @@ class MainActivity : ComponentActivity() {
                     autoPauseDuration = autoPauseDuration,
                     autoPauseSecondsLeft = autoPauseSecondsLeft,
                     lastShotMagnitude = lastShotMagnitude,
-                    exportStatus = exportStatus,
-                    onExportData = ::startExport,
-                    importStatus = importStatus,
-                    onImportData = ::startImport,
                     phoneSyncStatus = phoneSyncStatus,
-                    onSyncAllToPhone = ::syncAllSessionsToPhone,
-                    showImportConfirm = showImportConfirm,
-                    onConfirmImport = ::confirmImport,
-                    onCancelImport = ::cancelImport,
+                    onSyncData = ::syncData,
                     showAodPrompt = showAodPrompt,
                     onOpenDisplaySettings = { dismissAodPrompt(openSettings = true) },
                     onDismissAodPrompt = { dismissAodPrompt(openSettings = false) },
@@ -372,7 +348,7 @@ class MainActivity : ComponentActivity() {
         when {
             currentSession == null -> {
                 val now = System.currentTimeMillis()
-                val session = Session(id = now, startTime = now, lastShotTime = now, shotCount = shotCount, shotsPerEndAtStart = shotsPerEnd)
+                val session = Session(id = now, startTime = now, lastShotTime = now, shotCount = shotCount, shotsPerEndAtStart = shotsPerEnd, lastModified = now)
                 currentSession = session
                 if (shotCount > 0) sessions.add(0, session)
                 dbExecutor.execute { database.sessionDao().insertOrUpdate(session) }
@@ -412,20 +388,42 @@ class MainActivity : ComponentActivity() {
         Wearable.getDataClient(this).putDataItem(request)
     }
 
-    /** One-time backfill: pushes every locally stored session, not just ones saved after sync existed. */
-    private fun syncAllSessionsToPhone() {
+    /** Full bidirectional reconcile: push every local session (tombstones included, so deletes
+     * propagate) and merge in whatever the phone's DataItems currently hold. */
+    private fun syncData() {
         dbExecutor.execute {
-            val allSessions = database.sessionDao().getAll()
+            val allSessions = database.sessionDao().getAllIncludingDeleted()
             val shotsBySession = database.shotDao().getAll().groupBy { it.sessionId }
             allSessions.forEach { session ->
                 syncSessionToPhone(session, shotsBySession[session.id].orEmpty())
             }
-            runOnUiThread {
-                phoneSyncStatus = getString(R.string.phone_sync_success, allSessions.size)
-                phoneSyncStatusHandler.removeCallbacks(phoneSyncStatusHideRunnable)
-                phoneSyncStatusHandler.postDelayed(phoneSyncStatusHideRunnable, 6000)
-            }
         }
+        Wearable.getDataClient(this).dataItems
+            .addOnSuccessListener { buffer ->
+                dbExecutor.execute {
+                    buffer.forEach { item ->
+                        if (item.uri.path.orEmpty().startsWith("/session")) {
+                            DataMapItem.fromDataItem(item).dataMap.getString("json")?.let { json ->
+                                try {
+                                    val (session, shots) = parseSessionJson(json)
+                                    database.mergeIncomingSession(session, shots)
+                                } catch (_: Exception) {
+                                    // skip malformed item, keep reconciling the rest
+                                }
+                            }
+                        }
+                    }
+                    buffer.release()
+                    val all = database.sessionDao().getAll()
+                    runOnUiThread {
+                        sessions.clear()
+                        sessions.addAll(all)
+                        phoneSyncStatus = getString(R.string.phone_sync_success, all.size)
+                        phoneSyncStatusHandler.removeCallbacks(phoneSyncStatusHideRunnable)
+                        phoneSyncStatusHandler.postDelayed(phoneSyncStatusHideRunnable, 6000)
+                    }
+                }
+            }
     }
 
     private fun endSession() {
@@ -433,7 +431,8 @@ class MainActivity : ComponentActivity() {
         if (isDetecting) stopDetection()
         val session = currentSession ?: return
         if (shotCount > 0) {
-            val updated = session.copy(lastShotTime = System.currentTimeMillis(), shotCount = shotCount)
+            val now = System.currentTimeMillis()
+            val updated = session.copy(lastShotTime = now, shotCount = shotCount, lastModified = now)
             val idx = sessions.indexOfFirst { it.id == updated.id }
             if (idx >= 0) sessions[idx] = updated else sessions.add(0, updated)
             dbExecutor.execute {
@@ -452,7 +451,7 @@ class MainActivity : ComponentActivity() {
     private fun recordShot(magnitude: Float) {
         val session = currentSession ?: return
         val now = System.currentTimeMillis()
-        val updated = session.copy(lastShotTime = now, shotCount = shotCount)
+        val updated = session.copy(lastShotTime = now, shotCount = shotCount, lastModified = now)
         currentSession = updated
         val idx = sessions.indexOfFirst { it.id == updated.id }
         if (idx >= 0) sessions[idx] = updated else sessions.add(0, updated)
@@ -473,7 +472,7 @@ class MainActivity : ComponentActivity() {
         val now = System.currentTimeMillis()
         if (actualDelta > 0) {
             if (currentSession == null) {
-                val session = Session(id = now, startTime = now, lastShotTime = now, shotCount = newCount, shotsPerEndAtStart = shotsPerEnd)
+                val session = Session(id = now, startTime = now, lastShotTime = now, shotCount = newCount, shotsPerEndAtStart = shotsPerEnd, lastModified = now)
                 currentSession = session
                 sessions.add(0, session)
                 dbExecutor.execute {
@@ -483,7 +482,7 @@ class MainActivity : ComponentActivity() {
                 return
             }
             val session = currentSession!!
-            val updated = session.copy(lastShotTime = now, shotCount = newCount)
+            val updated = session.copy(lastShotTime = now, shotCount = newCount, lastModified = now)
             currentSession = updated
             val idx = sessions.indexOfFirst { it.id == updated.id }
             if (idx >= 0) sessions[idx] = updated else sessions.add(0, updated)
@@ -493,7 +492,7 @@ class MainActivity : ComponentActivity() {
             }
         } else {
             val session = currentSession ?: return
-            val updated = session.copy(shotCount = newCount)
+            val updated = session.copy(shotCount = newCount, lastModified = now)
             currentSession = updated
             val idx = sessions.indexOfFirst { it.id == updated.id }
             if (idx >= 0) {
@@ -506,7 +505,8 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun editSession(updated: Session) {
+    private fun editSession(edited: Session) {
+        val updated = edited.copy(lastModified = System.currentTimeMillis())
         val idx = sessions.indexOfFirst { it.id == updated.id }
         if (idx >= 0) {
             sessions[idx] = updated
@@ -521,90 +521,23 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    /** Tombstones rather than hard-deletes, so the deletion propagates to the phone instead of
+     * the phone's still-existing copy getting re-synced back down and resurrecting it. */
     private fun deleteSession(session: Session) {
         sessions.removeIf { it.id == session.id }
-        dbExecutor.execute { database.sessionDao().delete(session) }
+        val now = System.currentTimeMillis()
+        val tombstone = session.copy(deletedAt = now, lastModified = now)
+        dbExecutor.execute {
+            database.sessionDao().insertOrUpdate(tombstone)
+            database.shotDao().deleteAllForSession(session.id)
+            syncSessionToPhone(tombstone, emptyList())
+        }
         if (currentSession?.id == session.id) {
             if (isDetecting) stopDetection()
             currentSession = null
             shotCount = 0
             clearPendingSession()
         }
-    }
-
-    private fun startExport() {
-        dbExecutor.execute {
-            val path = try {
-                val allSessions = database.sessionDao().getAll()
-                val allShots = database.shotDao().getAll()
-                val json = buildExportJson(allSessions, allShots)
-                val dir = getExternalFilesDir(null) ?: throw IOException("no external files dir")
-                val stamp = SimpleDateFormat("yyyy-MM-dd_HHmm", Locale.US).format(Date())
-                val file = File(dir, "archery-export-$stamp.json")
-                file.writeText(json)
-                file.absolutePath
-            } catch (e: Exception) {
-                null
-            }
-            runOnUiThread { showExportStatus(path) }
-        }
-    }
-
-    private fun showExportStatus(path: String?) {
-        exportStatus = if (path != null) getString(R.string.export_success, path) else getString(R.string.export_failed)
-        exportStatusHandler.removeCallbacks(exportStatusHideRunnable)
-        exportStatusHandler.postDelayed(exportStatusHideRunnable, 6000)
-    }
-
-    private fun startImport() {
-        val dir = getExternalFilesDir(null)
-        val file = dir?.let { File(it, IMPORT_FILENAME) }
-        if (file == null || !file.exists()) {
-            val pathHint = if (dir != null) File(dir, IMPORT_FILENAME).absolutePath else IMPORT_FILENAME
-            importStatus = getString(R.string.import_file_not_found, pathHint)
-            importStatusHandler.removeCallbacks(importStatusHideRunnable)
-            importStatusHandler.postDelayed(importStatusHideRunnable, 6000)
-            return
-        }
-        showImportConfirm = true
-    }
-
-    private fun cancelImport() {
-        showImportConfirm = false
-    }
-
-    private fun confirmImport() {
-        showImportConfirm = false
-        dbExecutor.execute {
-            val success = try {
-                val dir = getExternalFilesDir(null) ?: throw IOException("no external files dir")
-                val json = File(dir, IMPORT_FILENAME).readText()
-                val imported = parseImportJson(json)
-                imported.forEach { (session, shots) ->
-                    database.sessionDao().insertOrUpdate(session)
-                    database.shotDao().deleteAllForSession(session.id)
-                    shots.forEach { database.shotDao().insert(it) }
-                    syncSessionToPhone(session, shots)
-                }
-                true
-            } catch (e: Exception) {
-                false
-            }
-            val all = if (success) database.sessionDao().getAll() else null
-            runOnUiThread {
-                if (all != null) {
-                    sessions.clear()
-                    sessions.addAll(all)
-                }
-                showImportStatus(success)
-            }
-        }
-    }
-
-    private fun showImportStatus(success: Boolean) {
-        importStatus = getString(if (success) R.string.import_success else R.string.import_failed)
-        importStatusHandler.removeCallbacks(importStatusHideRunnable)
-        importStatusHandler.postDelayed(importStatusHideRunnable, 3000)
     }
 
     private fun clearPendingSession() {
@@ -646,8 +579,6 @@ class MainActivity : ComponentActivity() {
         super.onDestroy()
         cancelAutoPause()
         magnitudeHandler.removeCallbacks(magnitudeHideRunnable)
-        exportStatusHandler.removeCallbacks(exportStatusHideRunnable)
-        importStatusHandler.removeCallbacks(importStatusHideRunnable)
         phoneSyncStatusHandler.removeCallbacks(phoneSyncStatusHideRunnable)
         shotDetector.stop()
         dbExecutor.shutdown()
@@ -670,15 +601,8 @@ fun ArcheryApp(
     autoPauseDuration: Int,
     autoPauseSecondsLeft: Int,
     lastShotMagnitude: Float?,
-    exportStatus: String?,
-    onExportData: () -> Unit,
-    importStatus: String?,
-    onImportData: () -> Unit,
     phoneSyncStatus: String?,
-    onSyncAllToPhone: () -> Unit,
-    showImportConfirm: Boolean,
-    onConfirmImport: () -> Unit,
-    onCancelImport: () -> Unit,
+    onSyncData: () -> Unit,
     showAodPrompt: Boolean,
     onOpenDisplaySettings: () -> Unit,
     onDismissAodPrompt: () -> Unit,
@@ -750,12 +674,8 @@ fun ArcheryApp(
                         onShotsPerEndChange = onShotsPerEndChange,
                         onAutoPauseEnabledChange = onAutoPauseEnabledChange,
                         onAutoPauseDurationChange = onAutoPauseDurationChange,
-                        exportStatus = exportStatus,
-                        onExportData = onExportData,
-                        importStatus = importStatus,
-                        onImportData = onImportData,
                         phoneSyncStatus = phoneSyncStatus,
-                        onSyncAllToPhone = onSyncAllToPhone
+                        onSyncData = onSyncData
                     )
                 }
             }
@@ -784,12 +704,6 @@ fun ArcheryApp(
                 AodPromptDialog(
                     onOpenSettings = onOpenDisplaySettings,
                     onDismiss = onDismissAodPrompt
-                )
-            }
-            if (showImportConfirm) {
-                ImportConfirmDialog(
-                    onConfirm = onConfirmImport,
-                    onCancel = onCancelImport
                 )
             }
         }

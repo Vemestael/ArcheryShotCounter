@@ -16,8 +16,14 @@ import androidx.room.RoomDatabase.JournalMode
 
 @Dao
 interface SessionDao {
-    @Query("SELECT * FROM sessions ORDER BY startTime DESC")
+    @Query("SELECT * FROM sessions WHERE deletedAt IS NULL ORDER BY startTime DESC")
     fun getAll(): List<Session>
+
+    @Query("SELECT * FROM sessions")
+    fun getAllIncludingDeleted(): List<Session>
+
+    @Query("SELECT * FROM sessions WHERE id = :id")
+    fun getById(id: Long): Session?
 
     @Upsert
     fun insertOrUpdate(session: Session)
@@ -30,6 +36,9 @@ interface SessionDao {
 interface ShotDao {
     @Insert
     fun insert(shot: Shot)
+
+    @Insert
+    fun insertAll(shots: List<Shot>)
 
     @Query("SELECT * FROM shots WHERE sessionId = :sessionId ORDER BY timestamp DESC")
     fun getBySession(sessionId: Long): List<Shot>
@@ -60,7 +69,14 @@ private val MIGRATION_2_3 = object : Migration(2, 3) {
     }
 }
 
-@Database(entities = [Session::class, Shot::class], version = 3, exportSchema = false)
+private val MIGRATION_3_4 = object : Migration(3, 4) {
+    override fun migrate(database: SupportSQLiteDatabase) {
+        database.execSQL("ALTER TABLE `sessions` ADD COLUMN `lastModified` INTEGER NOT NULL DEFAULT 0")
+        database.execSQL("ALTER TABLE `sessions` ADD COLUMN `deletedAt` INTEGER")
+    }
+}
+
+@Database(entities = [Session::class, Shot::class], version = 4, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun sessionDao(): SessionDao
     abstract fun shotDao(): ShotDao
@@ -74,9 +90,23 @@ abstract class AppDatabase : RoomDatabase() {
                     context.applicationContext,
                     AppDatabase::class.java,
                     "archery.db"
-                ).addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+                ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
                     .setJournalMode(JournalMode.TRUNCATE)
                     .build().also { instance = it }
             }
+    }
+
+    /** Applies an incoming session from the peer device only if it's newer (last-write-wins,
+     * tombstones included) than whatever's stored locally under the same id. */
+    fun mergeIncomingSession(incoming: Session, incomingShots: List<Shot>) {
+        runInTransaction {
+            val local = sessionDao().getById(incoming.id)
+            if (local != null && local.lastModified >= incoming.lastModified) return@runInTransaction
+            sessionDao().insertOrUpdate(incoming)
+            shotDao().deleteAllForSession(incoming.id)
+            if (incoming.deletedAt == null && incomingShots.isNotEmpty()) {
+                shotDao().insertAll(incomingShots)
+            }
+        }
     }
 }

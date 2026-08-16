@@ -19,47 +19,34 @@ fun sessionJson(session: Session, shots: List<Shot>): JSONObject {
         put("lastShotTime", session.lastShotTime)
         put("shotCount", session.shotCount)
         put("shotsPerEndAtStart", session.shotsPerEndAtStart)
+        put("lastModified", session.lastModified)
+        put("deletedAt", session.deletedAt ?: JSONObject.NULL)
         put("shots", shotsArray)
     }
 }
 
-/** Same per-session shape as one element of buildExportJson's array — used for the phone Data Layer sync. */
+/** Single-session payload shape carried by each Data Layer DataItem, in both sync directions. */
 fun buildSessionJson(session: Session, shots: List<Shot>): String = sessionJson(session, shots).toString()
 
-fun buildExportJson(sessions: List<Session>, shots: List<Shot>): String {
-    val shotsBySession = shots.groupBy { it.sessionId }
-    val sessionsArray = JSONArray()
-    sessions.sortedByDescending { it.startTime }.forEach { session ->
-        sessionsArray.put(sessionJson(session, shotsBySession[session.id].orEmpty()))
-    }
-    return JSONObject().apply {
-        put("exportedAt", System.currentTimeMillis())
-        put("sessions", sessionsArray)
-    }.toString(2)
-}
-
-data class ImportedSession(val session: Session, val shots: List<Shot>)
-
-fun parseImportJson(json: String): List<ImportedSession> {
-    val sessionsArray = JSONObject(json).getJSONArray("sessions")
-    return List(sessionsArray.length()) { i ->
-        val sessionObj = sessionsArray.getJSONObject(i)
-        val session = Session(
-            id = sessionObj.getLong("id"),
-            startTime = sessionObj.getLong("startTime"),
-            lastShotTime = sessionObj.getLong("lastShotTime"),
-            shotCount = sessionObj.getInt("shotCount"),
-            shotsPerEndAtStart = sessionObj.optInt("shotsPerEndAtStart", 0)
+fun parseSessionJson(json: String): Pair<Session, List<Shot>> {
+    val obj = JSONObject(json)
+    val session = Session(
+        id = obj.getLong("id"),
+        startTime = obj.getLong("startTime"),
+        lastShotTime = obj.getLong("lastShotTime"),
+        shotCount = obj.getInt("shotCount"),
+        shotsPerEndAtStart = obj.optInt("shotsPerEndAtStart", 0),
+        lastModified = obj.optLong("lastModified", 0L),
+        deletedAt = if (obj.isNull("deletedAt")) null else obj.optLong("deletedAt")
+    )
+    val shotsArray = obj.getJSONArray("shots")
+    val shots = List(shotsArray.length()) { j ->
+        val shotObj = shotsArray.getJSONObject(j)
+        Shot(
+            sessionId = session.id,
+            timestamp = shotObj.getLong("timestamp"),
+            magnitude = if (shotObj.isNull("magnitude")) null else shotObj.getDouble("magnitude").toFloat()
         )
-        val shotsArray = sessionObj.getJSONArray("shots")
-        val shots = List(shotsArray.length()) { j ->
-            val shotObj = shotsArray.getJSONObject(j)
-            Shot(
-                sessionId = session.id,
-                timestamp = shotObj.getLong("timestamp"),
-                magnitude = if (shotObj.isNull("magnitude")) null else shotObj.getDouble("magnitude").toFloat()
-            )
-        }
-        ImportedSession(session, shots)
     }
+    return session to shots
 }

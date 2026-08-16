@@ -12,7 +12,9 @@ data class Session(
     val startTime: Long,
     val lastShotTime: Long,
     val shotCount: Int,
-    val shotsPerEndAtStart: Int = 0
+    val shotsPerEndAtStart: Int = 0,
+    val lastModified: Long = 0L,
+    val deletedAt: Long? = null
 )
 
 class SessionStorage(context: Context) {
