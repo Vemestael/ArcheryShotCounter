@@ -8,7 +8,7 @@ repositories and the overall picture of where things stand.
 
 ## Repositories
 
-- **[ArcheryShotCounter-wearos](https://github.com/Vemestael/ArcheryShotCounter)** — the Wear
+- **[ArcheryShotCounter-wearos](https://github.com/Vemestael/ArcheryShotCounter-wearos)** — the Wear
   OS app. Detects shots from the wrist accelerometer's recoil spike, no buttons needed during
   shooting. Published, currently at v1.4.
 - **ArcheryShotCounter-android** — the phone companion app. Not started yet; will sync session
