@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Privacy Policy — Archery Shot Counter</title>
+<style>
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    max-width: 680px;
+    margin: 40px auto;
+    padding: 0 20px;
+    line-height: 1.6;
+    color: #1a1a1a;
+  }
+  h1 { font-size: 1.6em; }
+  h2 { font-size: 1.15em; margin-top: 1.8em; }
+  .updated { color: #666; font-size: 0.9em; }
+  code { background: #f2f2f2; padding: 1px 5px; border-radius: 3px; font-size: 0.92em; }
+  ul { padding-left: 1.3em; }
+</style>
+</head>
+<body>
+
+<h1>Privacy Policy — Archery Shot Counter</h1>
+<p class="updated">Last updated: October 14, 2026</p>
+
+<p>Archery Shot Counter is made of two apps published together under one Google Play listing:</p>
+<ul>
+  <li><strong>the watch app</strong> (Wear OS), which counts archery shots using the watch's wrist accelerometer, and</li>
+  <li><strong>the phone companion</strong> (Android), which shows, edits and backs up the sessions recorded on the watch.</li>
+</ul>
+<p>This page explains what data both apps handle and how. In short: there are no accounts, no servers, no analytics and no ads, and the developer never receives any of your data.</p>
+
+<h2>Data the apps collect</h2>
+<p>None. Neither app collects your data or sends it to the developer or anyone else. Neither app requests the <code>INTERNET</code> permission or makes network requests of its own — you can verify this in the public source code at <a href="https://github.com/Vemestael/ArcheryShotCounter-wearos">github.com/Vemestael/ArcheryShotCounter-wearos</a> and <a href="https://github.com/Vemestael/ArcheryShotCounter-android">github.com/Vemestael/ArcheryShotCounter-android</a>.</p>
+
+<h2>Data the apps store</h2>
+<p>The following is stored locally on your own devices, in each app's private storage:</p>
+<ul>
+  <li>Training sessions: start and end time, shot count, and the shots-per-end setting used</li>
+  <li>Individual shots: timestamp and the acceleration value that triggered detection</li>
+  <li>Settings — on the watch: sensitivity, shot cooldown, ends and auto-pause, display and battery options, theme, counter size, language; on the phone: theme and language</li>
+</ul>
+<p>Shot detection runs entirely on the watch. Raw accelerometer data is processed in real time and is not stored — only the value of each counted shot is kept.</p>
+
+<h2>Syncing between your watch and phone</h2>
+<p>If you install the phone companion, sessions and shots are synced between your watch and your phone, in both directions, so that edits and deletions made on either device appear on the other. This uses the Wear OS Data Layer, a component of Google Play services on your devices. When the watch and phone are not directly connected over Bluetooth or Wi-Fi, Google Play services may relay the encrypted data through Google's servers; this is handled by Google under <a href="https://policies.google.com/privacy">Google's Privacy Policy</a>, and the developer has no access to it. The data only ever goes to your own paired devices.</p>
+<p>If you don't install the phone companion, nothing leaves the watch through the app.</p>
+
+<h2>Export and import</h2>
+<p>The phone companion can export your history to a JSON or CSV file and import it back. Files are saved to, and opened from, a location you choose through the system file picker; what happens to an exported file afterwards is up to you. The watch app has no export of its own — to keep a copy, sync to the phone and export there.</p>
+
+<h2>Android system backup</h2>
+<p>Both apps allow Android's standard Auto Backup and device-transfer features (platform features, not something the apps implement themselves). If backup is enabled on your device, Android may include the app's local data in the encrypted backup it keeps in your own Google Account, the same way it does for most apps. That backup is created, stored and governed by Google — the developer has no access to it.</p>
+
+<h2>Deleting your data</h2>
+<ul>
+  <li>Delete individual sessions in either app; the deletion syncs to the other device.</li>
+  <li>Clear all data in the watch's Settings or the phone's menu. Clearing affects only the device you clear it on.</li>
+  <li>Uninstalling an app removes all of its local data from that device.</li>
+</ul>
+
+<h2>Permissions</h2>
+<p>Watch app:</p>
+<ul>
+  <li><code>VIBRATE</code> — to buzz the watch when a shot is counted</li>
+  <li><code>WAKE_LOCK</code> — to keep the screen on during an active session</li>
+  <li><code>REQUEST_IGNORE_BATTERY_OPTIMIZATIONS</code> — still declared from an earlier version, which asked you to exempt the app from battery optimization; the current version no longer asks for it</li>
+</ul>
+<p>Phone companion: no permissions requiring your approval.</p>
+<p>Neither app requests location, camera, microphone, contacts, health or fitness data, or any other sensitive permission. The accelerometer used for shot detection does not require a permission.</p>
+
+<h2>Third parties</h2>
+<p>The apps contain no analytics, advertising or crash-reporting SDKs and share no data with third parties. The only Google component involved is Google Play services, as described under syncing and backup above.</p>
+
+<h2>Children's privacy</h2>
+<p>The apps are not directed at children and do not collect information from anyone, of any age.</p>
+
+<h2>Changes to this policy</h2>
+<p>If this policy changes, the update will be posted on this page with a revised "Last updated" date.</p>
+
+<h2>Contact</h2>
+<p>Questions about this policy or the apps can be sent to <a href="mailto:vemestael@gmail.com">vemestael@gmail.com</a>.</p>
+
+</body>
+</html>
